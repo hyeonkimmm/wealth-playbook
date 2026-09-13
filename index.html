@@ -405,13 +405,31 @@
         function fmt(n) { return Math.round(n).toLocaleString() + '원'; }
 
         function calculate() {
-          var cash = parseFloat(document.getElementById(idPrefix + 'cash').value) || 0;
+          var cash = Math.max(0, parseFloat(document.getElementById(idPrefix + 'cash').value) || 0);
           var targetRatio = parseFloat(document.getElementById(idPrefix + 'ratio').value) || 0.7;
           var band = parseFloat(document.getElementById(idPrefix + 'band').value) || 0.10;
-          var qldQty = parseFloat(document.getElementById(idPrefix + 'qld_qty').value) || 0;
-          var qldPrice = parseFloat(document.getElementById(idPrefix + 'qld_price').value) || 0;
-          var schdQty = parseFloat(document.getElementById(idPrefix + 'schd_qty').value) || 0;
-          var schdPrice = parseFloat(document.getElementById(idPrefix + 'schd_price').value) || 0;
+          var qldQty = Math.max(0, parseFloat(document.getElementById(idPrefix + 'qld_qty').value) || 0);
+          var qldPrice = Math.max(0, parseFloat(document.getElementById(idPrefix + 'qld_price').value) || 0);
+          var schdQty = Math.max(0, parseFloat(document.getElementById(idPrefix + 'schd_qty').value) || 0);
+          var schdPrice = Math.max(0, parseFloat(document.getElementById(idPrefix + 'schd_price').value) || 0);
+
+          var card = document.getElementById(idPrefix + 'action_card');
+          var badge = document.getElementById(idPrefix + 'status_badge');
+          var title = document.getElementById(idPrefix + 'status_title');
+          var detail = document.getElementById(idPrefix + 'action_detail');
+          var after = document.getElementById(idPrefix + 'after_sim');
+
+          // 가격 유효성 검사
+          if (qldPrice <= 0 || schdPrice <= 0) {
+            badge.style.background = '#fef3c7';
+            badge.style.color = '#b45309';
+            card.style.borderLeftColor = '#f59e0b';
+            badge.innerText = '입력 대기';
+            title.innerText = '올바른 ETF 현재가를 입력해주세요';
+            detail.innerHTML = '현재가가 0원 이하인 경우 정확한 비중과 매수 수량을 계산할 수 없습니다.';
+            after.innerText = '';
+            return;
+          }
 
           var qldVal = qldQty * qldPrice;
           var schdVal = schdQty * schdPrice;
@@ -422,11 +440,45 @@
           document.getElementById(idPrefix + 'schd_eval').innerText = fmt(schdVal);
           document.getElementById(idPrefix + 'total_val').innerText = fmt(totalAll);
 
+          var targetPctStr = Math.round(targetRatio * 100) + ':' + Math.round((1 - targetRatio) * 100);
+
+          // 시나리오 0: 보유 주식이 전혀 없는 초기 시작 (신규 진입)
           if (totalStock === 0) {
-            document.getElementById(idPrefix + 'bar_qld').style.width = '70%';
-            document.getElementById(idPrefix + 'bar_qld').innerText = '70%';
-            document.getElementById(idPrefix + 'bar_schd').style.width = '30%';
-            document.getElementById(idPrefix + 'bar_schd').innerText = '30%';
+            document.getElementById(idPrefix + 'bar_qld').style.width = (targetRatio * 100) + '%';
+            document.getElementById(idPrefix + 'bar_qld').innerText = 'QLD 0% (목표 ' + Math.round(targetRatio * 100) + '%)';
+            document.getElementById(idPrefix + 'bar_schd').style.width = ((1 - targetRatio) * 100) + '%';
+            document.getElementById(idPrefix + 'bar_schd').innerText = 'SCHD 0% (목표 ' + Math.round((1 - targetRatio) * 100) + '%)';
+
+            card.style.borderLeftColor = '#2563eb';
+            badge.style.background = '#dbeafe';
+            badge.style.color = '#1d4ed8';
+            badge.innerText = '신규 포트폴리오 구축 (' + targetPctStr + ')';
+            title.innerText = '보유 주식이 없습니다. 이번 달 적립금으로 초기 비중을 맞추어 매수하세요';
+
+            if (cash <= 0) {
+              detail.innerHTML = '투자 가능 금액(적립금)을 1원 이상 입력해주세요.';
+              after.innerText = '매수 후 예상 비중: -';
+              return;
+            }
+
+            var initQldCash = cash * targetRatio;
+            var initSchdCash = cash * (1 - targetRatio);
+            var buyQ = Math.floor(initQldCash / qldPrice);
+            var buyS = Math.floor(initSchdCash / schdPrice);
+            var spent = (buyQ * qldPrice) + (buyS * schdPrice);
+            var leftover = cash - spent;
+
+            detail.innerHTML = '• <strong>TIGER 미국나스닥100레버리지:</strong> <span style="color:#2563eb; font-size:15px;">' + buyQ.toLocaleString() + '주</span> 매수 (' + fmt(buyQ * qldPrice) + ')<br>' +
+                               '• <strong>TIGER 미국배당다우존스:</strong> <span style="color:#16a34a; font-size:15px;">' + buyS.toLocaleString() + '주</span> 매수 (' + fmt(buyS * schdPrice) + ')' +
+                               (leftover > 0 ? '<br><span style="font-size:12px; color:#64748b;">(매수 후 잔여 예수금: ' + fmt(leftover) + ')</span>' : '');
+            var finalQ = buyQ * qldPrice;
+            var finalS = buyS * schdPrice;
+            var finalTot = finalQ + finalS;
+            if (finalTot > 0) {
+              after.innerText = '매수 후 예상 비중: QLD ' + ((finalQ / finalTot) * 100).toFixed(1) + '% : SCHD ' + ((finalS / finalTot) * 100).toFixed(1) + '% (' + targetPctStr + ' 초기 세팅 완료)';
+            } else {
+              after.innerText = '적립금이 주가보다 작아 1주 이상 매수할 수 없습니다.';
+            }
             return;
           }
 
@@ -439,54 +491,82 @@
           document.getElementById(idPrefix + 'bar_schd').style.width = (100 - barW) + '%';
           document.getElementById(idPrefix + 'bar_schd').innerText = 'SCHD ' + (curSchdPct * 100).toFixed(1) + '%';
 
-          var card = document.getElementById(idPrefix + 'action_card');
-          var badge = document.getElementById(idPrefix + 'status_badge');
-          var title = document.getElementById(idPrefix + 'status_title');
-          var detail = document.getElementById(idPrefix + 'action_detail');
-          var after = document.getElementById(idPrefix + 'after_sim');
-
           var upper = targetRatio + band;
           var lower = targetRatio - band;
+          var targetQldVal = totalAll * targetRatio;
+          var targetSchdVal = totalAll * (1 - targetRatio);
 
-          // Case 1: 과열 상승 (80% 이상)
+          // Case 1: 과열 상승 (QLD 비중 >= 상한선, e.g. 80%)
           if (curQldPct >= upper) {
-            card.style.borderLeftColor = '#dc2626';
-            badge.style.background = '#fee2e2';
-            badge.style.color = '#b91c1c';
-            badge.innerText = '상승 과열 익절 스위칭 트리거';
-            title.innerText = '나스닥 과열: 레버리지 일부를 매도해 배당주로 차익을 확정하세요';
+            // 하위 조건 1A: 적립금이 워낙 커서 매도 없이 적립금만 SCHD에 넣어도 목표 비중 복구가 가능한 경우
+            if (qldVal <= targetQldVal) {
+              card.style.borderLeftColor = '#2563eb';
+              badge.style.background = '#dbeafe';
+              badge.style.color = '#1d4ed8';
+              badge.innerText = '스마트 적립 (매도 불필요)';
+              title.innerText = '주식 비중은 과열 구간이나, 당월 적립금으로 매도 없이 목표 복구가 가능합니다';
 
-            var targetQldVal = totalAll * targetRatio;
-            var excessQld = qldVal - targetQldVal;
-            var sellQldShares = Math.floor(excessQld / qldPrice);
-            var proceeds = sellQldShares * qldPrice;
-            var buySchdShares = Math.floor((proceeds + cash) / schdPrice);
+              var buyS = Math.floor(cash / schdPrice);
+              detail.innerHTML = '이번 달 적립금 전액으로 <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#16a34a; font-size:15px;">' + buyS.toLocaleString() + '주</span> (' + fmt(buyS * schdPrice) + ') 집중 매수하세요.';
+              var nQ = qldVal;
+              var nS = schdVal + (buyS * schdPrice);
+              after.innerText = '매수 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '%';
+            } else {
+              // 하위 조건 1B: 진정한 스위칭 필요 (QLD 매도 -> SCHD 매수)
+              card.style.borderLeftColor = '#dc2626';
+              badge.style.background = '#fee2e2';
+              badge.style.color = '#b91c1c';
+              badge.innerText = '상승 과열 익절 스위칭 트리거';
+              title.innerText = '나스닥 과열: 레버리지 일부를 매도해 배당주로 차익을 확정하세요';
 
-            detail.innerHTML = '1. <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellQldShares.toLocaleString() + '주</span> 매도하여 약 ' + fmt(proceeds) + ' 수익 확정<br>' +
-                               '2. 매도 대금 + 당월 적립금으로 <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#16a34a; font-size:15px;">' + buySchdShares.toLocaleString() + '주</span> 매수';
-            var nQ = qldVal - proceeds;
-            var nS = schdVal + (buySchdShares * schdPrice);
-            after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ/(nQ+nS))*100).toFixed(1) + '% : SCHD ' + ((nS/(nQ+nS))*100).toFixed(1) + '% (목표 비율 복구 완료)';
+              var excessQld = qldVal - targetQldVal;
+              var sellQldShares = Math.min(qldQty, Math.max(1, Math.floor(excessQld / qldPrice)));
+              var proceeds = sellQldShares * qldPrice;
+              var totalAvailable = proceeds + cash;
+              var buySchdShares = Math.floor(totalAvailable / schdPrice);
+
+              detail.innerHTML = '1. <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellQldShares.toLocaleString() + '주</span> 매도하여 약 ' + fmt(proceeds) + ' 수익 확정<br>' +
+                                 '2. 매도 대금' + (cash > 0 ? ' + 당월 적립금' : '') + '으로 <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#16a34a; font-size:15px;">' + buySchdShares.toLocaleString() + '주</span> 매수';
+              var nQ = qldVal - proceeds;
+              var nS = schdVal + (buySchdShares * schdPrice);
+              after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '% (목표 비율 ' + targetPctStr + ' 복구 완료)';
+            }
           }
-          // Case 2: 시장 폭락 (60% 이하)
+          // Case 2: 시장 폭락 (QLD 비중 <= 하한선, e.g. 60%)
           else if (curQldPct <= lower) {
-            card.style.borderLeftColor = '#16a34a';
-            badge.style.background = '#dcfce7';
-            badge.style.color = '#15803d';
-            badge.innerText = '시장 폭락 저가매수 스위칭 트리거';
-            title.innerText = '나스닥 폭락: 덜 떨어진 배당주를 팔아 레버리지 평단을 대폭 낮추세요';
+            // 하위 조건 2A: 적립금만으로 QLD를 매수해도 목표 비중 복구가 가능한 경우
+            if (schdVal <= targetSchdVal) {
+              card.style.borderLeftColor = '#16a34a';
+              badge.style.background = '#dcfce7';
+              badge.style.color = '#15803d';
+              badge.innerText = '스마트 적립 (매도 불필요)';
+              title.innerText = '나스닥 폭락: 매도 없이 당월 적립금 전액으로 레버리지 바닥을 주우세요';
 
-            var targetSchdVal = totalAll * (1 - targetRatio);
-            var excessSchd = schdVal - targetSchdVal;
-            var sellSchdShares = Math.floor(excessSchd / schdPrice);
-            var proceeds = sellSchdShares * schdPrice;
-            var buyQldShares = Math.floor((proceeds + cash) / qldPrice);
+              var buyQ = Math.floor(cash / qldPrice);
+              detail.innerHTML = '이번 달 적립금 전액으로 <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#2563eb; font-size:15px;">' + buyQ.toLocaleString() + '주</span> (' + fmt(buyQ * qldPrice) + ') 바닥 집중 매수하세요.';
+              var nQ = qldVal + (buyQ * qldPrice);
+              var nS = schdVal;
+              after.innerText = '매수 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '%';
+            } else {
+              // 하위 조건 2B: 진정한 스위칭 필요 (SCHD 매도 -> QLD 매수)
+              card.style.borderLeftColor = '#16a34a';
+              badge.style.background = '#dcfce7';
+              badge.style.color = '#15803d';
+              badge.innerText = '시장 폭락 저가매수 스위칭 트리거';
+              title.innerText = '나스닥 폭락: 덜 떨어진 배당주를 팔아 레버리지 평단을 대폭 낮추세요';
 
-            detail.innerHTML = '1. <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellSchdShares.toLocaleString() + '주</span> 매도<br>' +
-                               '2. 매도 대금 + 당월 적립금으로 <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#2563eb; font-size:15px;">' + buyQldShares.toLocaleString() + '주</span> 바닥 집중 매수';
-            var nQ = qldVal + (buyQldShares * qldPrice);
-            var nS = schdVal - proceeds;
-            after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ/(nQ+nS))*100).toFixed(1) + '% : SCHD ' + ((nS/(nQ+nS))*100).toFixed(1) + '% (반등 탄력 극대화)';
+              var excessSchd = schdVal - targetSchdVal;
+              var sellSchdShares = Math.min(schdQty, Math.max(1, Math.floor(excessSchd / schdPrice)));
+              var proceeds = sellSchdShares * schdPrice;
+              var totalAvailable = proceeds + cash;
+              var buyQldShares = Math.floor(totalAvailable / qldPrice);
+
+              detail.innerHTML = '1. <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellSchdShares.toLocaleString() + '주</span> 매도하여 약 ' + fmt(proceeds) + ' 현금 확보<br>' +
+                                 '2. 매도 대금' + (cash > 0 ? ' + 당월 적립금' : '') + '으로 <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#2563eb; font-size:15px;">' + buyQldShares.toLocaleString() + '주</span> 바닥 집중 매수';
+              var nQ = qldVal + (buyQldShares * qldPrice);
+              var nS = schdVal - proceeds;
+              after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '% (반등 탄력 극대화)';
+            }
           }
           // Case 3: 정상 범위 (스마트 적립)
           else {
@@ -496,34 +576,63 @@
             badge.innerText = '정상 밴드 내 (스마트 적립)';
             title.innerText = '기존 주식 매도 없이, 이번 달 적립금으로 부족한 종목만 채워 넣으세요';
 
-            var tQ = totalAll * targetRatio;
-            var tS = totalAll * (1 - targetRatio);
-            var nQld = Math.max(0, tQ - qldVal);
-            var nSchd = Math.max(0, tS - schdVal);
-            var aQ = 0, aS = 0;
-            if (nQld + nSchd > 0) {
-              aQ = cash * (nQld / (nQld + nSchd));
-              aS = cash * (nSchd / (nQld + nSchd));
-            } else {
-              aQ = cash * targetRatio;
-              aS = cash * (1 - targetRatio);
+            if (cash <= 0) {
+              detail.innerHTML = '현재 비중이 정상 밴드 내에 있으며, 당월 적립금이 없으므로 이번 달에는 아무런 조치가 필요하지 않습니다.';
+              after.innerText = '현재 비중 유지: QLD ' + (curQldPct * 100).toFixed(1) + '% : SCHD ' + (curSchdPct * 100).toFixed(1) + '%';
+              return;
             }
-            var bQ = Math.floor(aQ / qldPrice);
-            var bS = Math.floor(aS / schdPrice);
+
+            var defQld = Math.max(0, targetQldVal - qldVal);
+            var defSchd = Math.max(0, targetSchdVal - schdVal);
+            var allocQ = 0, allocS = 0;
+
+            if (defQld > 0 && defSchd > 0) {
+              allocQ = cash * (defQld / (defQld + defSchd));
+              allocS = cash * (defSchd / (defQld + defSchd));
+            } else if (defQld > 0) {
+              allocQ = cash;
+              allocS = 0;
+            } else if (defSchd > 0) {
+              allocQ = 0;
+              allocS = cash;
+            } else {
+              allocQ = cash * targetRatio;
+              allocS = cash * (1 - targetRatio);
+            }
+
+            var bQ = Math.floor(allocQ / qldPrice);
+            var bS = Math.floor(allocS / schdPrice);
+
+            // 잔여 현금으로 부족한 자산 추가 1주 매수 시도
+            var rem = cash - ((bQ * qldPrice) + (bS * schdPrice));
+            if (rem >= qldPrice && defQld >= defSchd) {
+              bQ += Math.floor(rem / qldPrice);
+              rem = cash - ((bQ * qldPrice) + (bS * schdPrice));
+            }
+            if (rem >= schdPrice) {
+              bS += Math.floor(rem / schdPrice);
+              rem = cash - ((bQ * qldPrice) + (bS * schdPrice));
+            }
 
             if (bQ > 0 && bS > 0) {
               detail.innerHTML = '• <strong>TIGER 미국나스닥100레버리지:</strong> <span style="color:#2563eb; font-size:15px;">' + bQ.toLocaleString() + '주</span> 매수 (' + fmt(bQ * qldPrice) + ')<br>' +
-                                 '• <strong>TIGER 미국배당다우존스:</strong> <span style="color:#16a34a; font-size:15px;">' + bS.toLocaleString() + '주</span> 매수 (' + fmt(bS * schdPrice) + ')';
+                                 '• <strong>TIGER 미국배당다우존스:</strong> <span style="color:#16a34a; font-size:15px;">' + bS.toLocaleString() + '주</span> 매수 (' + fmt(bS * schdPrice) + ')' +
+                                 (rem > 0 ? '<br><span style="font-size:12px; color:#64748b;">(매수 후 잔여 예수금: ' + fmt(rem) + ')</span>' : '');
             } else if (bQ > 0) {
-              detail.innerHTML = '이번 달 적립금으로 <strong>TIGER 미국나스닥100레버리지</strong>만 <span style="color:#2563eb; font-size:15px;">' + bQ.toLocaleString() + '주</span> (' + fmt(bQ * qldPrice) + ') 집중 매수하세요.';
+              detail.innerHTML = '이번 달 적립금으로 <strong>TIGER 미국나스닥100레버리지</strong>만 <span style="color:#2563eb; font-size:15px;">' + bQ.toLocaleString() + '주</span> (' + fmt(bQ * qldPrice) + ') 집중 매수하세요.' +
+                                 (rem > 0 ? '<br><span style="font-size:12px; color:#64748b;">(매수 후 잔여 예수금: ' + fmt(rem) + ')</span>' : '');
             } else if (bS > 0) {
-              detail.innerHTML = '이번 달 적립금으로 <strong>TIGER 미국배당다우존스</strong>만 <span style="color:#16a34a; font-size:15px;">' + bS.toLocaleString() + '주</span> (' + fmt(bS * schdPrice) + ') 집중 매수하세요.';
+              detail.innerHTML = '이번 달 적립금으로 <strong>TIGER 미국배당다우존스</strong>만 <span style="color:#16a34a; font-size:15px;">' + bS.toLocaleString() + '주</span> (' + fmt(bS * schdPrice) + ') 집중 매수하세요.' +
+                                 (rem > 0 ? '<br><span style="font-size:12px; color:#64748b;">(매수 후 잔여 예수금: ' + fmt(rem) + ')</span>' : '');
             } else {
-              detail.innerHTML = '적립금이 주가보다 작아 1주 이상 매수할 수 없습니다. 적립금을 계좌 예수금으로 이월하세요.';
+              detail.innerHTML = '적립금(' + fmt(cash) + ')이 주가보다 작아 1주 이상 매수할 수 없습니다. 적립금을 계좌 예수금으로 이월하세요.';
             }
             var nQ = qldVal + (bQ * qldPrice);
             var nS = schdVal + (bS * schdPrice);
-            after.innerText = '매수 후 예상 비중: QLD ' + ((nQ/(nQ+nS))*100).toFixed(1) + '% : SCHD ' + ((nS/(nQ+nS))*100).toFixed(1) + '% (7:3 복구 완료)';
+            var nTot = nQ + nS;
+            if (nTot > 0) {
+              after.innerText = '매수 후 예상 비중: QLD ' + ((nQ / nTot) * 100).toFixed(1) + '% : SCHD ' + ((nS / nTot) * 100).toFixed(1) + '% (' + targetPctStr + ' 복구 지향)';
+            }
           }
         }
 
