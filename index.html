@@ -262,6 +262,9 @@
       auto2top: true,
       homepage: 'README.md',
       executeScript: true,
+      alias: {
+        '/.*/_sidebar.md': '/_sidebar.md'
+      },
       plugins: [
         // 본문 하단 작성자 푸터 카드 자동 삽입 플러그인
         function(hook) {
@@ -315,6 +318,8 @@
       if (!targets || targets.length === 0) return;
 
       targets.forEach(function(target, idx) {
+        if (target.getAttribute('data-mounted') === 'true' && target.children.length > 0) return;
+        target.setAttribute('data-mounted', 'true');
         var idPrefix = 'calc_' + idx + '_';
         var html = [
           '<div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 1.8rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, Pretendard, sans-serif;">',
@@ -533,6 +538,24 @@
         calculate();
       });
     };
+
+    // 추가 자동 감지 및 마운트 보증 리스너 (Docsify lifecycle 외 추가 안전장치)
+    window.addEventListener('DOMContentLoaded', function() {
+      if (window.mountWealthCalculators) window.mountWealthCalculators();
+    });
+    window.addEventListener('hashchange', function() {
+      setTimeout(function() {
+        if (window.mountWealthCalculators) window.mountWealthCalculators();
+      }, 100);
+    });
+    if (typeof MutationObserver !== 'undefined') {
+      var _mountObserver = new MutationObserver(function() {
+        if (document.querySelector('.wealth-rebalance-calc-mount:not([data-mounted="true"])')) {
+          if (window.mountWealthCalculators) window.mountWealthCalculators();
+        }
+      });
+      _mountObserver.observe(document.documentElement, { childList: true, subtree: true });
+    }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
   <!-- Docsify Themeable Plugin -->
