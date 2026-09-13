@@ -239,15 +239,6 @@
       margin-top: 2px;
     }
 
-    /* 검색창 모던화 */
-    .search input {
-      border: 1px solid #cbd5e1 !important;
-      border-radius: 8px !important;
-      padding: 8px 12px !important;
-      font-family: var(--base-font-family) !important;
-      font-size: 13px !important;
-      background: #ffffff !important;
-    }
   </style>
 </head>
 <body>
@@ -259,13 +250,6 @@
       subMaxLevel: 3,
       auto2top: true,
       homepage: 'README.md',
-      search: {
-        maxAge: 86400000,
-        paths: 'auto',
-        placeholder: '전략 및 용어 검색...',
-        noData: '검색 결과가 없습니다.',
-        depth: 4
-      },
       plugins: [
         // 본문 하단 작성자 푸터 카드 자동 삽입 플러그인
         function(hook) {
@@ -309,8 +293,6 @@
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
   <!-- Docsify Themeable Plugin -->
   <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
-  <!-- Search Plugin -->
-  <script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
   <!-- Copy Code Plugin -->
   <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
 </body>
