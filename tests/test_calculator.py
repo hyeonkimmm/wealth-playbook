@@ -369,6 +369,67 @@ def test_invalid_prices_and_quantities():
     assert res["status"] == "INVALID_PRICE"
 
 
+def test_adversarial_single_asset_qld_100_percent():
+    """시나리오 12 (Adversarial): QLD만 100% 보유하고 SCHD 0주일 때의 강제 리밸런싱 스위칭 정합성"""
+    res = simulate_rebalancing(
+        cash=0, target_ratio=0.7, band=0.10,
+        qld_qty=1000, qld_price=23_500,
+        schd_qty=0, schd_price=12_500
+    )
+    assert res["status"] == "OVERWEIGHT_SWITCHING"
+    assert res["sell_qld"] == 300
+    assert res["buy_schd"] == 564
+    assert 69.0 <= res["post_qld_pct"] <= 71.0
+
+
+def test_adversarial_single_asset_schd_100_percent():
+    """시나리오 13 (Adversarial): SCHD만 100% 보유하고 QLD 0주일 때의 강제 리밸런싱 스위칭 정합성"""
+    res = simulate_rebalancing(
+        cash=0, target_ratio=0.7, band=0.10,
+        qld_qty=0, qld_price=23_500,
+        schd_qty=2000, schd_price=12_500
+    )
+    assert res["status"] == "UNDERWEIGHT_SWITCHING"
+    assert res["sell_schd"] == 1400
+    assert res["buy_qld"] == 744
+    assert 69.0 <= res["post_qld_pct"] <= 71.0
+
+
+def test_adversarial_ultra_large_scale_portfolio_10b_krw():
+    """시나리오 14 (Adversarial): 100억 원 규모 대형 자산가의 부동소수점 오차 및 오버플로우 한계 검증"""
+    res = simulate_rebalancing(
+        cash=100_000_000, target_ratio=0.7, band=0.10,
+        qld_qty=350_000, qld_price=23_500,
+        schd_qty=140_000, schd_price=12_500
+    )
+    # 총 자산 약 100억 7,500만 원. QLD 비율 82.38% (과열)
+    assert res["status"] == "OVERWEIGHT_SWITCHING"
+    assert res["sell_qld"] > 0
+    assert res["buy_schd"] > 0
+    assert 69.5 <= res["post_qld_pct"] <= 70.5
+
+
+def test_adversarial_exact_boundary_threshold():
+    """시나리오 15 (Adversarial): 비중이 정확히 80.00% 경계값에 걸렸을 때 상태 전이 정합성"""
+    # QLD: 8,000,000원 / 23,500 = 340.4255 -> 340주 (7,990,000원)
+    # SCHD: 2,000,000원 / 12,500 = 160주 (2,000,000원)
+    # 총주식: 9,990,000원. QLD 비중 = 79.9799% (정상 밴드)
+    # 반대로 QLD를 342주로 올리면 8,037,000원 / 10,037,000원 = 80.073% (과열)
+    res_under = simulate_rebalancing(
+        cash=0, target_ratio=0.7, band=0.10,
+        qld_qty=340, qld_price=23_500,
+        schd_qty=160, schd_price=12_500
+    )
+    assert res_under["status"] == "NORMAL_ZERO_CASH"
+
+    res_over = simulate_rebalancing(
+        cash=0, target_ratio=0.7, band=0.10,
+        qld_qty=342, qld_price=23_500,
+        schd_qty=160, schd_price=12_500
+    )
+    assert res_over["status"] == "OVERWEIGHT_SWITCHING"
+
+
 # ============================================================================
 # 3. Playwright 브라우저 E2E 검증 (실제 index.html DOM 실행 검증)
 # ============================================================================
@@ -458,3 +519,36 @@ def test_e2e_true_switching_render(local_server):
         assert "매수" in detail_text
 
         browser.close()
+
+
+def test_e2e_quick_cash_buttons(local_server):
+    """E2E 테스트 4: 투자 가능 금액 퀵 버튼(+10만, +50만, +100만, 초기화) 인터랙션 확인"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(local_server)
+        page.wait_for_selector(".wealth-rebalance-calc-mount")
+
+        # 초기화 버튼 클릭 -> cash 0
+        page.click(".btn-cash-reset")
+        page.wait_for_timeout(200)
+        val = page.locator("#calc_0_cash").input_value()
+        assert val == "0"
+
+        # +50만 클릭 -> cash 500,000
+        page.click("button.btn-cash-quick:text('+50만')")
+        page.wait_for_timeout(200)
+        assert page.locator("#calc_0_cash").input_value() == "500000"
+
+        # +100만 클릭 -> cash 1,500,000
+        page.click("button.btn-cash-quick:text('+100만')")
+        page.wait_for_timeout(200)
+        assert page.locator("#calc_0_cash").input_value() == "1500000"
+
+        # +10만 클릭 -> cash 1,600,000
+        page.click("button.btn-cash-quick:text('+10만')")
+        page.wait_for_timeout(200)
+        assert page.locator("#calc_0_cash").input_value() == "1600000"
+
+        browser.close()
+
