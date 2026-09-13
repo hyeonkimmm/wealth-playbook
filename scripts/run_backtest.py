@@ -2,11 +2,10 @@
 """
 Wealth Playbook - Backtest Engine & Chart Generator
 언제든 시작일(--start)과 종료일(--end)을 지정하여 백테스트를 실행하고,
-결과 표와 SVG 차트를 자동으로 생성/갱신합니다.
+결과 표와 SVG 차트(자산군 비교 및 비중별 비교)를 자동으로 생성/갱신합니다.
 
 사용 예시:
   python scripts/run_backtest.py --start 2012-01-01 --end 2025-12-31
-  python scripts/run_backtest.py --start 2015-01-01 --end 2026-06-30
 """
 
 import argparse
@@ -31,6 +30,12 @@ def calc_stats(series):
     dd = (series - cummax) / cummax
     mdd = dd.min()
     
+    dret = series.pct_change().dropna()
+    vol = dret.std() * np.sqrt(252)
+    rf = 0.02
+    sharpe = (dret.mean() * 252 - rf) / vol if vol > 0 else 0.0
+    calmar = cagr / abs(mdd) if abs(mdd) > 0 else 0.0
+
     s_2022 = series.loc['2022-01-01':'2022-12-31']
     ret_2022 = s_2022.iloc[-1] / s_2022.iloc[0] - 1 if len(s_2022) > 0 else np.nan
     mdd_2022 = ((s_2022 - s_2022.cummax()) / s_2022.cummax()).min() if len(s_2022) > 0 else np.nan
@@ -39,20 +44,25 @@ def calc_stats(series):
         'total_return': total_return,
         'cagr': cagr,
         'mdd': mdd,
+        'vol': vol,
+        'sharpe': sharpe,
+        'calmar': calmar,
         'ret_2022': ret_2022,
         'mdd_2022': mdd_2022
     }
 
-def sim_band(data, band=0.10):
+def sim_band(data, target_ratio=0.7, band=0.10):
     prices = data[['QLD', 'SCHD']].values
     dates = data.index
     n = len(prices)
     portfolio_val = np.zeros(n)
     portfolio_val[0] = 10000
     shares = np.zeros(2)
-    shares[0] = (portfolio_val[0] * 0.7) / prices[0, 0]
-    shares[1] = (portfolio_val[0] * 0.3) / prices[0, 1]
+    shares[0] = (portfolio_val[0] * target_ratio) / prices[0, 0]
+    shares[1] = (portfolio_val[0] * (1.0 - target_ratio)) / prices[0, 1]
     rebal_count = 0
+    sell_q = 0
+    sell_s = 0
     
     for i in range(1, n):
         val_0 = shares[0] * prices[i, 0]
@@ -60,18 +70,29 @@ def sim_band(data, band=0.10):
         tot = val_0 + val_1
         portfolio_val[i] = tot
         w0 = val_0 / tot
-        if w0 >= (0.7 + band) or w0 <= (0.7 - band):
-            shares[0] = (tot * 0.7) / prices[i, 0]
-            shares[1] = (tot * 0.3) / prices[i, 1]
+        upper = min(0.99, target_ratio + band)
+        lower = max(0.01, target_ratio - band)
+        if w0 >= upper:
+            shares[0] = (tot * target_ratio) / prices[i, 0]
+            shares[1] = (tot * (1.0 - target_ratio)) / prices[i, 1]
             rebal_count += 1
+            sell_q += 1
+        elif w0 <= lower:
+            shares[0] = (tot * target_ratio) / prices[i, 0]
+            shares[1] = (tot * (1.0 - target_ratio)) / prices[i, 1]
+            rebal_count += 1
+            sell_s += 1
             
     s = pd.Series(portfolio_val, index=dates)
     st = calc_stats(s)
     st['rebal_count'] = rebal_count
+    st['sell_q'] = sell_q
+    st['sell_s'] = sell_s
     return s, st
 
-def sim_dca(data, key, band=0.10, monthly_money=100.0):
-    month_starts = set(data.resample('MS').first().index)
+def sim_dca(data, key_or_ratio, band=0.10, monthly_money=100.0):
+    # 매월 첫 번째 실제 거래일을 정확하게 추출 (주말/공휴일 제외 방지)
+    month_starts = set(data.groupby([data.index.year, data.index.month]).apply(lambda x: x.index[0]))
     total_inv = 0.0
     shares_0 = 0.0
     shares_1 = 0.0
@@ -79,42 +100,53 @@ def sim_dca(data, key, band=0.10, monthly_money=100.0):
     val_history = []
     rebal_count = 0
     
+    is_barbell = not isinstance(key_or_ratio, str) or key_or_ratio.endswith(':') or ':' in key_or_ratio
+    target_ratio = 0.7
+    if is_barbell:
+        if isinstance(key_or_ratio, float):
+            target_ratio = key_or_ratio
+        elif isinstance(key_or_ratio, str) and ':' in key_or_ratio:
+            parts = key_or_ratio.split(':')
+            target_ratio = float(parts[0]) / (float(parts[0]) + float(parts[1]))
+
     for dt in data.index:
         p_qld = data.loc[dt, 'QLD']
         p_schd = data.loc[dt, 'SCHD']
         
         if dt in month_starts:
             total_inv += monthly_money
-            if key == '7:3':
+            if is_barbell:
                 curr0 = shares_0 * p_qld
                 curr1 = shares_1 * p_schd
                 tot = curr0 + curr1 + monthly_money
-                t0, t1 = tot * 0.7, tot * 0.3
+                t0, t1 = tot * target_ratio, tot * (1.0 - target_ratio)
                 need0 = max(0, t0 - curr0)
                 need1 = max(0, t1 - curr1)
                 if need0 + need1 > 0:
                     a0 = monthly_money * (need0 / (need0 + need1))
                     a1 = monthly_money * (need1 / (need0 + need1))
                 else:
-                    a0, a1 = monthly_money * 0.7, monthly_money * 0.3
+                    a0, a1 = monthly_money * target_ratio, monthly_money * (1.0 - target_ratio)
                 shares_0 += a0 / p_qld
                 shares_1 += a1 / p_schd
             else:
-                shares_single += monthly_money / data.loc[dt, key]
+                shares_single += monthly_money / data.loc[dt, key_or_ratio]
                 
-        if key == '7:3':
+        if is_barbell:
             curr0 = shares_0 * p_qld
             curr1 = shares_1 * p_schd
             tot = curr0 + curr1
             if tot > 0:
                 w0 = curr0 / tot
-                if w0 >= (0.7 + band) or w0 <= (0.7 - band):
-                    shares_0 = (tot * 0.7) / p_qld
-                    shares_1 = (tot * 0.3) / p_schd
+                upper = min(0.99, target_ratio + band)
+                lower = max(0.01, target_ratio - band)
+                if w0 >= upper or w0 <= lower:
+                    shares_0 = (tot * target_ratio) / p_qld
+                    shares_1 = (tot * (1.0 - target_ratio)) / p_schd
                     rebal_count += 1
             val = tot
         else:
-            val = shares_single * data.loc[dt, key]
+            val = shares_single * data.loc[dt, key_or_ratio]
         val_history.append(val)
         
     s = pd.Series(val_history, index=data.index)
@@ -223,7 +255,94 @@ def generate_svg_chart(start_yr, end_yr, stats_dict, output_paths):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, 'w', encoding='utf-8') as f:
             f.write(svg)
-    print(f"[SVG 갱신 완료] {len(output_paths)}개 파일 업데이트")
+    print(f"[자산군 비교 SVG 갱신 완료] {len(output_paths)}개 파일 업데이트")
+
+def generate_ratios_svg_chart(start_yr, end_yr, ratios_data, output_paths):
+    years_count = end_yr - start_yr + 1
+    cols = [
+        ('5:5', '5:5 (절반)', 105, False),
+        ('6:4', '6:4 (보수)', 250, False),
+        ('7:3', '★ 7:3 (표준)', 395, True),
+        ('8:2', '8:2 (공격)', 540, False),
+        ('9:1', '9:1 (초공격)', 685, False)
+    ]
+    
+    col_svgs = []
+    for key, label, cx, is_hi in cols:
+        st = ratios_data[key]
+        cagr = st['cagr'] * 100
+        mdd = st['mdd_2022'] * 100
+        
+        cagr_h = cagr * 4
+        cagr_y = 210 - cagr_h
+        mdd_h = abs(mdd) * 1.2
+        
+        if is_hi:
+            bg_hi = f'''<rect x="-46" y="70" width="92" height="248" fill="#eff6ff" rx="8" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3"/>'''
+            cagr_bar = f'''<rect x="-30" y="{cagr_y}" width="28" height="{cagr_h}" class="bar-cagr-highlight"/>'''
+            cagr_lbl = f'''<text x="-16" y="{cagr_y - 8}" class="val-label" fill="#1d4ed8" font-size="13px">+{cagr:.1f}%</text>'''
+            mdd_bar = f'''<rect x="2" y="210" width="28" height="{mdd_h}" class="bar-mdd" fill="#f87171"/>'''
+            axis_lbl = f'''<text x="0" y="338" class="axis-label" fill="#1d4ed8">{label}</text>'''
+        else:
+            bg_hi = ''
+            bar_color = '#93c5fd' if key in ['8:2', '9:1'] else '#94a3b8' if key == '6:4' else '#cbd5e1'
+            cagr_bar = f'''<rect x="-30" y="{cagr_y}" width="28" height="{cagr_h}" class="bar-cagr" fill="{bar_color}"/>'''
+            cagr_lbl = f'''<text x="-16" y="{cagr_y - 8}" class="val-label">+{cagr:.1f}%</text>'''
+            mdd_bar = f'''<rect x="2" y="210" width="28" height="{mdd_h}" class="bar-mdd" fill="#ef4444"/>'''
+            axis_lbl = f'''<text x="0" y="328" class="axis-label">{label}</text>'''
+            
+        mdd_lbl = f'''<text x="16" y="{210 + mdd_h + 16}" class="val-label" fill="#dc2626">{mdd:.1f}%</text>'''
+        
+        col_svg = f'''  <!-- {key} -->
+  <g transform="translate({cx}, 0)">
+    {bg_hi}
+    {cagr_bar}
+    {cagr_lbl}
+    {mdd_bar}
+    {mdd_lbl}
+    {axis_lbl}
+  </g>'''
+        col_svgs.append(col_svg)
+
+    cols_str = '\n\n'.join(col_svgs)
+    
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 370" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg {{ fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 16px; }}
+      .title {{ font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 18px; font-weight: 800; fill: #0f172a; }}
+      .subtitle {{ font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 12px; fill: #64748b; }}
+      .axis-label {{ font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 13px; font-weight: 700; fill: #1e293b; text-anchor: middle; }}
+      .bar-cagr {{ fill: #2563eb; rx: 4px; }}
+      .bar-cagr-highlight {{ fill: #1d4ed8; rx: 4px; }}
+      .bar-mdd {{ fill: #ef4444; rx: 4px; }}
+      .val-label {{ font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 12px; font-weight: 700; fill: #0f172a; text-anchor: middle; }}
+      .legend-text {{ font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 11.5px; fill: #475569; }}
+    </style>
+  </defs>
+
+  <rect x="2" y="2" width="796" height="366" class="bg"/>
+  <text x="32" y="38" class="title">전략 비중별(5:5 ~ 9:1) {years_count}년간({start_yr}~{end_yr}) 실전 백테스트 비교</text>
+  <text x="32" y="58" class="subtitle">QLD(2배 레버리지) : SCHD(배당) 비중별 연평균 성장률(CAGR) vs 2022년 하락장 최대낙폭(MDD)</text>
+
+  <!-- Legend -->
+  <g transform="translate(480, 26)">
+    <rect x="0" y="0" width="14" height="14" fill="#2563eb" rx="3"/>
+    <text x="20" y="11" class="legend-text">연평균 성장률 (CAGR)</text>
+    <rect x="150" y="0" width="14" height="14" fill="#ef4444" rx="3"/>
+    <text x="170" y="11" class="legend-text">2022 하락장 MDD</text>
+  </g>
+
+  <!-- Zero Line -->
+  <line x1="40" y1="210" x2="760" y2="210" stroke="#94a3b8" stroke-width="1.5"/>
+
+{cols_str}
+</svg>"""
+    for path in output_paths:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(svg)
+    print(f"[비중별 비교 SVG 갱신 완료] {len(output_paths)}개 파일 업데이트")
 
 def main():
     args = parse_args()
@@ -238,14 +357,14 @@ def main():
     years_diff = (end_dt - start_dt).days / 365.25
     print(f"실제 데이터 수집: {start_dt.strftime('%Y-%m-%d')} ~ {end_dt.strftime('%Y-%m-%d')} (총 {len(data)} 거래일, 약 {years_diff:.1f}년)")
 
-    # 1. 거치식
+    # 1. 거치식 자산군 및 밴드 비교
     st_qld = calc_stats(data['QLD'])
     st_schd = calc_stats(data['SCHD'])
     st_qqq = calc_stats(data['QQQ'])
     st_spy = calc_stats(data['SPY'])
-    _, st_barbell10 = sim_band(data, 0.10)
-    _, st_barbell15 = sim_band(data, 0.15)
-    _, st_barbell20 = sim_band(data, 0.20)
+    _, st_barbell10 = sim_band(data, 0.70, 0.10)
+    _, st_barbell15 = sim_band(data, 0.70, 0.15)
+    _, st_barbell20 = sim_band(data, 0.70, 0.20)
     
     stats_dict = {
         'QLD': st_qld,
@@ -257,7 +376,7 @@ def main():
         '7:3_20': st_barbell20
     }
 
-    print("\n--- 1. 일시불 거치식 투자 성과 ---")
+    print("\n--- 1. 일시불 거치식 투자 성과 (표준 바벨 및 벤치마크) ---")
     rows = [
         ("★ 7:3 바벨 (±10%p)", st_barbell10['total_return'], st_barbell10['cagr'], st_barbell10['mdd'], st_barbell10['ret_2022'], st_barbell10['mdd_2022'], f"{st_barbell10['rebal_count']}회"),
         ("7:3 바벨 (±15%p)", st_barbell15['total_return'], st_barbell15['cagr'], st_barbell15['mdd'], st_barbell15['ret_2022'], st_barbell15['mdd_2022'], f"{st_barbell15['rebal_count']}회"),
@@ -275,31 +394,76 @@ def main():
     df_lump["2022 MDD"] = df_lump["2022 MDD"].apply(lambda x: f"{x*100:.2f}%")
     print(df_lump.to_string(index=False))
 
-    # 2. 적립식
-    print(f"\n--- 2. 월 {args.monthly:.0f}만원 적립식 투자 성과 ---")
-    dca_rows = []
-    for name, key, band in [
-        ("★ 7:3 바벨 (±10%p)", "7:3", 0.10),
-        ("7:3 바벨 (±15%p)", "7:3", 0.15),
-        ("7:3 바벨 (±20%p)", "7:3", 0.20),
-        ("QLD 적립 (100%)", "QLD", 0),
-        ("QQQ 적립 (나스닥 100)", "QQQ", 0),
-        ("SPY 적립 (S&P 500)", "SPY", 0),
-        ("SCHD 적립 (배당 100%)", "SCHD", 0),
-    ]:
-        tot_inv, fin_val, ret, mdd, reb = sim_dca(data, key, band, args.monthly)
-        dca_rows.append({
-            "전략": name,
+    # 2. 전략 비중별 비교 분석 (5:5, 6:4, 7:3, 8:2, 9:1)
+    print("\n--- 2. 전략 비중별 비교 분석 (5:5 ~ 9:1, ±10%p 밴드 기준) ---")
+    ratio_stats = {}
+    r_rows_lump = []
+    r_rows_dca = []
+    
+    ratios_list = [
+        (0.50, "5:5 (절반 바벨)"),
+        (0.60, "6:4 (보수적 바벨)"),
+        (0.70, "★ 7:3 (표준 바벨)"),
+        (0.80, "8:2 (공격적 바벨)"),
+        (0.90, "9:1 (초공격 바벨)")
+    ]
+
+    for r_val, r_name in ratios_list:
+        key = f"{int(round(r_val*10))}:{int(round((1-r_val)*10))}"
+        _, st_r = sim_band(data, r_val, 0.10)
+        ratio_stats[key] = st_r
+        
+        r_rows_lump.append({
+            "비중 전략": r_name,
+            "총수익률": f"+{st_r['total_return']*100:.1f}%",
+            "CAGR": f"{st_r['cagr']*100:.2f}%",
+            "전체 MDD": f"{st_r['mdd']*100:.2f}%",
+            "2022 MDD": f"{st_r['mdd_2022']*100:.2f}%",
+            "Calmar": f"{st_r['calmar']:.2f}",
+            "스위칭 횟수": f"{st_r['rebal_count']}회 (익절 {st_r['sell_q']}, 저점 {st_r['sell_s']})"
+        })
+
+        tot_inv, fin_val, ret, mdd, reb = sim_dca(data, r_val, 0.10, args.monthly)
+        r_rows_dca.append({
+            "비중 전략": r_name,
             "총 납입 원금": f"{tot_inv:.0f}만 원",
             "최종 평가 금액": f"{fin_val:.0f}만 원",
             "누적 수익률": f"+{ret*100:.1f}%",
             "적립식 MDD": f"{mdd*100:.2f}%",
             "강제 스위칭": f"{reb}회"
         })
-    df_dca = pd.DataFrame(dca_rows)
-    print(df_dca.to_string(index=False))
 
-    # 3. SVG 차트 파일 갱신
+    df_ratio_lump = pd.DataFrame(r_rows_lump)
+    print("\n[비중별 거치식 성과]")
+    print(df_ratio_lump.to_string(index=False))
+
+    df_ratio_dca = pd.DataFrame(r_rows_dca)
+    print(f"\n[비중별 월 {args.monthly:.0f}만원 적립식 성과]")
+    print(df_ratio_dca.to_string(index=False))
+
+    # 3. 월 100만 원 적립식 벤치마크 비교
+    print(f"\n--- 3. 월 {args.monthly:.0f}만원 적립식 투자 성과 (벤치마크 비교) ---")
+    dca_bm_rows = []
+    for name, key_or_tick in [
+        ("★ 7:3 바벨 (±10%p)", 0.70),
+        ("QLD 적립 (100%)", "QLD"),
+        ("QQQ 적립 (나스닥 100)", "QQQ"),
+        ("SPY 적립 (S&P 500)", "SPY"),
+        ("SCHD 적립 (배당 100%)", "SCHD"),
+    ]:
+        tot_inv, fin_val, ret, mdd, reb = sim_dca(data, key_or_tick, 0.10, args.monthly)
+        dca_bm_rows.append({
+            "전략": name,
+            "총 납입 원금": f"{tot_inv:.0f}만 원",
+            "최종 평가 금액": f"{fin_val:.0f}만 원",
+            "누적 수익률": f"+{ret*100:.1f}%",
+            "적립식 MDD": f"{mdd*100:.2f}%",
+            "강제 스위칭": f"{reb}회" if "바벨" in name else "-"
+        })
+    df_dca_bm = pd.DataFrame(dca_bm_rows)
+    print(df_dca_bm.to_string(index=False))
+
+    # 4. SVG 차트 파일 갱신
     script_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.dirname(script_dir)
     chart_paths = [
@@ -311,6 +475,12 @@ def main():
         os.path.join(root_dir, "strategies", "assets", "backtest-cagr-chart-v3.svg")
     ]
     generate_svg_chart(start_dt.year, end_dt.year, stats_dict, chart_paths)
+
+    ratios_chart_paths = [
+        os.path.join(root_dir, "assets", "backtest-ratios-chart.svg"),
+        os.path.join(root_dir, "strategies", "assets", "backtest-ratios-chart.svg")
+    ]
+    generate_ratios_svg_chart(start_dt.year, end_dt.year, ratio_stats, ratios_chart_paths)
 
 if __name__ == "__main__":
     main()

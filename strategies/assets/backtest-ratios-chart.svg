@@ -14,8 +14,8 @@
   </defs>
 
   <rect x="2" y="2" width="796" height="366" class="bg"/>
-  <text x="32" y="38" class="title">14년간(2012~2025) 실전 백테스트 성과 비교</text>
-  <text x="32" y="58" class="subtitle">배당 재투자 반영 실제 수정주가 기반 · 연평균 성장률(CAGR) vs 2022년 하락장 최대낙폭(MDD)</text>
+  <text x="32" y="38" class="title">전략 비중별(5:5 ~ 9:1) 14년간(2012~2025) 실전 백테스트 비교</text>
+  <text x="32" y="58" class="subtitle">QLD(2배 레버리지) : SCHD(배당) 비중별 연평균 성장률(CAGR) vs 2022년 하락장 최대낙폭(MDD)</text>
 
   <!-- Legend -->
   <g transform="translate(480, 26)">
@@ -28,49 +28,53 @@
   <!-- Zero Line -->
   <line x1="40" y1="210" x2="760" y2="210" stroke="#94a3b8" stroke-width="1.5"/>
 
-  <!-- 1. QLD 100% -->
+  <!-- 5:5 -->
   <g transform="translate(105, 0)">
-    <rect x="-30" y="76.98418326725059" width="28" height="133.0158167327494" class="bar-cagr" fill="#93c5fd"/>
-    <text x="-16" y="68.98418326725059" class="val-label">+33.3%</text>
-    <rect x="2" y="210" width="28" height="75.69722035333274" class="bar-mdd"/>
-    <text x="16" y="301.69722035333274" class="val-label" fill="#dc2626">-63.1%</text>
-    <text x="0" y="328" class="axis-label">QLD (100%)</text>
+    
+    <rect x="-30" y="113.59967838719024" width="28" height="96.40032161280976" class="bar-cagr" fill="#cbd5e1"/>
+    <text x="-16" y="105.59967838719024" class="val-label">+24.1%</text>
+    <rect x="2" y="210" width="28" height="48.60897040546904" class="bar-mdd" fill="#ef4444"/>
+    <text x="16" y="274.60897040546905" class="val-label" fill="#dc2626">-40.5%</text>
+    <text x="0" y="328" class="axis-label">5:5 (절반)</text>
   </g>
 
-  <!-- 2. 7:3 바벨 전략 (Highlight) -->
+  <!-- 6:4 -->
   <g transform="translate(250, 0)">
+    
+    <rect x="-30" y="106.90024754792984" width="28" height="103.09975245207016" class="bar-cagr" fill="#94a3b8"/>
+    <text x="-16" y="98.90024754792984" class="val-label">+25.8%</text>
+    <rect x="2" y="210" width="28" height="56.05544306673323" class="bar-mdd" fill="#ef4444"/>
+    <text x="16" y="282.05544306673323" class="val-label" fill="#dc2626">-46.7%</text>
+    <text x="0" y="328" class="axis-label">6:4 (보수)</text>
+  </g>
+
+  <!-- 7:3 -->
+  <g transform="translate(395, 0)">
     <rect x="-46" y="70" width="92" height="248" fill="#eff6ff" rx="8" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3"/>
     <rect x="-30" y="96.00163082497411" width="28" height="113.99836917502589" class="bar-cagr-highlight"/>
     <text x="-16" y="88.00163082497411" class="val-label" fill="#1d4ed8" font-size="13px">+28.5%</text>
     <rect x="2" y="210" width="28" height="59.081710710346876" class="bar-mdd" fill="#f87171"/>
     <text x="16" y="285.0817107103469" class="val-label" fill="#dc2626">-49.2%</text>
-    <text x="0" y="338" class="axis-label" fill="#1d4ed8">★ 7:3 바벨</text>
+    <text x="0" y="338" class="axis-label" fill="#1d4ed8">★ 7:3 (표준)</text>
   </g>
 
-  <!-- 3. QQQ (나스닥 100) -->
-  <g transform="translate(395, 0)">
-    <rect x="-30" y="131.4206931085199" width="28" height="78.57930689148009" class="bar-cagr" fill="#94a3b8"/>
-    <text x="-16" y="123.42069310851991" class="val-label">+19.6%</text>
-    <rect x="2" y="210" width="28" height="41.79357776025244" class="bar-mdd" fill="#fca5a5"/>
-    <text x="16" y="267.79357776025245" class="val-label" fill="#dc2626">-34.8%</text>
-    <text x="0" y="328" class="axis-label">QQQ (1배)</text>
-  </g>
-
-  <!-- 4. SPY (S&P 500) -->
+  <!-- 8:2 -->
   <g transform="translate(540, 0)">
-    <rect x="-30" y="150.7876149138347" width="28" height="59.21238508616531" class="bar-cagr" fill="#cbd5e1"/>
-    <text x="-16" y="142.7876149138347" class="val-label">+14.8%</text>
-    <rect x="2" y="210" width="28" height="29.395680780447954" class="bar-mdd" fill="#fca5a5"/>
-    <text x="16" y="255.39568078044795" class="val-label" fill="#dc2626">-24.5%</text>
-    <text x="0" y="328" class="axis-label">SPY (S&amp;P 500)</text>
+    
+    <rect x="-30" y="90.17168163454649" width="28" height="119.82831836545351" class="bar-cagr" fill="#93c5fd"/>
+    <text x="-16" y="82.17168163454649" class="val-label">+30.0%</text>
+    <rect x="2" y="210" width="28" height="66.64714879031735" class="bar-mdd" fill="#ef4444"/>
+    <text x="16" y="292.6471487903174" class="val-label" fill="#dc2626">-55.5%</text>
+    <text x="0" y="328" class="axis-label">8:2 (공격)</text>
   </g>
 
-  <!-- 5. SCHD (배당) -->
+  <!-- 9:1 -->
   <g transform="translate(685, 0)">
-    <rect x="-30" y="161.88494469713785" width="28" height="48.11505530286215" class="bar-cagr" fill="#cbd5e1"/>
-    <text x="-16" y="153.88494469713785" class="val-label">+12.0%</text>
-    <rect x="2" y="210" width="28" height="20.2131739573238" class="bar-mdd" fill="#86efac"/>
-    <text x="16" y="246.2131739573238" class="val-label" fill="#15803d">-16.8%</text>
-    <text x="0" y="328" class="axis-label">SCHD (배당)</text>
+    
+    <rect x="-30" y="80.66966642556088" width="28" height="129.33033357443912" class="bar-cagr" fill="#93c5fd"/>
+    <text x="-16" y="72.66966642556088" class="val-label">+32.3%</text>
+    <rect x="2" y="210" width="28" height="74.77600580530871" class="bar-mdd" fill="#ef4444"/>
+    <text x="16" y="300.7760058053087" class="val-label" fill="#dc2626">-62.3%</text>
+    <text x="0" y="328" class="axis-label">9:1 (초공격)</text>
   </g>
 </svg>
