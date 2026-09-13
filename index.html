@@ -506,7 +506,7 @@
           var targetQldVal = totalAll * targetRatio;
           var targetSchdVal = totalAll * (1 - targetRatio);
 
-          // Case 1: 과열 상승 (QLD 비중 >= 상한선, e.g. 80%)
+          // Case 1: 레버리지 비중 초과 (QLD 비중 >= 상한선, e.g. 80%)
           if (curQldPct >= upper) {
             // 하위 조건 1A: 적립금이 워낙 커서 매도 없이 적립금만 SCHD에 넣어도 목표 비중 복구가 가능한 경우
             if (qldVal <= targetQldVal) {
@@ -514,20 +514,20 @@
               badge.style.background = '#dbeafe';
               badge.style.color = '#1d4ed8';
               badge.innerText = '스마트 적립 (매도 불필요)';
-              title.innerText = '주식 비중은 과열 구간이나, 당월 적립금으로 매도 없이 목표 복구가 가능합니다';
+              title.innerText = '레버리지 비중이 상한선을 초과했으나, 당월 적립금만으로 목표 비율 복구가 가능합니다';
 
               var buyS = Math.floor(cash / schdPrice);
-              detail.innerHTML = '이번 달 적립금 전액으로 <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#16a34a; font-size:15px;">' + buyS.toLocaleString() + '주</span> (' + fmt(buyS * schdPrice) + ') 집중 매수하세요.';
+              detail.innerHTML = '기존 주식 매도 없이, 이번 달 적립금 전액으로 <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#16a34a; font-size:15px;">' + buyS.toLocaleString() + '주</span> (' + fmt(buyS * schdPrice) + ') 집중 매수하세요.';
               var nQ = qldVal;
               var nS = schdVal + (buyS * schdPrice);
-              after.innerText = '매수 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '%';
+              after.innerText = '매수 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '% (목표 비율 수렴)';
             } else {
               // 하위 조건 1B: 진정한 스위칭 필요 (QLD 매도 -> SCHD 매수)
               card.style.borderLeftColor = '#dc2626';
               badge.style.background = '#fee2e2';
               badge.style.color = '#b91c1c';
-              badge.innerText = '상승 과열 익절 스위칭 트리거';
-              title.innerText = '나스닥 과열: 레버리지 일부를 매도해 배당주로 차익을 확정하세요';
+              badge.innerText = '레버리지 비중 초과 (스위칭 트리거)';
+              title.innerText = '레버리지 비중 상한 초과: 초과분을 매도하여 배당주로 리밸런싱하세요';
 
               var excessQld = qldVal - targetQldVal;
               var sellQldShares = Math.min(qldQty, Math.max(1, Math.floor(excessQld / qldPrice)));
@@ -535,14 +535,14 @@
               var totalAvailable = proceeds + cash;
               var buySchdShares = Math.floor(totalAvailable / schdPrice);
 
-              detail.innerHTML = '1. <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellQldShares.toLocaleString() + '주</span> 매도하여 약 ' + fmt(proceeds) + ' 수익 확정<br>' +
+              detail.innerHTML = '1. <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellQldShares.toLocaleString() + '주</span> 매도하여 약 ' + fmt(proceeds) + ' 현금 확보<br>' +
                                  '2. 매도 대금' + (cash > 0 ? ' + 당월 적립금' : '') + '으로 <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#16a34a; font-size:15px;">' + buySchdShares.toLocaleString() + '주</span> 매수';
               var nQ = qldVal - proceeds;
               var nS = schdVal + (buySchdShares * schdPrice);
               after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '% (목표 비율 ' + targetPctStr + ' 복구 완료)';
             }
           }
-          // Case 2: 시장 폭락 (QLD 비중 <= 하한선, e.g. 60%)
+          // Case 2: 레버리지 비중 부족 (QLD 비중 <= 하한선, e.g. 60%)
           else if (curQldPct <= lower) {
             // 하위 조건 2A: 적립금만으로 QLD를 매수해도 목표 비중 복구가 가능한 경우
             if (schdVal <= targetSchdVal) {
@@ -550,20 +550,20 @@
               badge.style.background = '#dcfce7';
               badge.style.color = '#15803d';
               badge.innerText = '스마트 적립 (매도 불필요)';
-              title.innerText = '나스닥 폭락: 매도 없이 당월 적립금 전액으로 레버리지 바닥을 주우세요';
+              title.innerText = '레버리지 비중이 하한선에 미달했으나, 당월 적립금만으로 목표 비율 복구가 가능합니다';
 
               var buyQ = Math.floor(cash / qldPrice);
-              detail.innerHTML = '이번 달 적립금 전액으로 <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#2563eb; font-size:15px;">' + buyQ.toLocaleString() + '주</span> (' + fmt(buyQ * qldPrice) + ') 바닥 집중 매수하세요.';
+              detail.innerHTML = '기존 주식 매도 없이, 이번 달 적립금 전액으로 <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#2563eb; font-size:15px;">' + buyQ.toLocaleString() + '주</span> (' + fmt(buyQ * qldPrice) + ') 집중 매수하세요.';
               var nQ = qldVal + (buyQ * qldPrice);
               var nS = schdVal;
-              after.innerText = '매수 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '%';
+              after.innerText = '매수 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '% (목표 비율 수렴)';
             } else {
               // 하위 조건 2B: 진정한 스위칭 필요 (SCHD 매도 -> QLD 매수)
               card.style.borderLeftColor = '#16a34a';
               badge.style.background = '#dcfce7';
               badge.style.color = '#15803d';
-              badge.innerText = '시장 폭락 저가매수 스위칭 트리거';
-              title.innerText = '나스닥 폭락: 덜 떨어진 배당주를 팔아 레버리지 평단을 대폭 낮추세요';
+              badge.innerText = '레버리지 비중 부족 (스위칭 트리거)';
+              title.innerText = '레버리지 비중 하한 미달: 배당주 일부를 매도하여 레버리지로 리밸런싱하세요';
 
               var excessSchd = schdVal - targetSchdVal;
               var sellSchdShares = Math.min(schdQty, Math.max(1, Math.floor(excessSchd / schdPrice)));
@@ -572,10 +572,10 @@
               var buyQldShares = Math.floor(totalAvailable / qldPrice);
 
               detail.innerHTML = '1. <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellSchdShares.toLocaleString() + '주</span> 매도하여 약 ' + fmt(proceeds) + ' 현금 확보<br>' +
-                                 '2. 매도 대금' + (cash > 0 ? ' + 당월 적립금' : '') + '으로 <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#2563eb; font-size:15px;">' + buyQldShares.toLocaleString() + '주</span> 바닥 집중 매수';
+                                 '2. 매도 대금' + (cash > 0 ? ' + 당월 적립금' : '') + '으로 <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#2563eb; font-size:15px;">' + buyQldShares.toLocaleString() + '주</span> 매수';
               var nQ = qldVal + (buyQldShares * qldPrice);
               var nS = schdVal - proceeds;
-              after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '% (반등 탄력 극대화)';
+              after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ / (nQ + nS)) * 100).toFixed(1) + '% : SCHD ' + ((nS / (nQ + nS)) * 100).toFixed(1) + '% (목표 비율 ' + targetPctStr + ' 복구 완료)';
             }
           }
           // Case 3: 정상 범위 (스마트 적립)
