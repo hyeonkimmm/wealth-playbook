@@ -304,7 +304,9 @@ def main():
     root_dir = os.path.dirname(script_dir)
     chart_paths = [
         os.path.join(root_dir, "assets", "backtest-cagr-chart.svg"),
-        os.path.join(root_dir, "strategies", "assets", "backtest-cagr-chart.svg")
+        os.path.join(root_dir, "strategies", "assets", "backtest-cagr-chart.svg"),
+        os.path.join(root_dir, "assets", "backtest-cagr-chart-v2.svg"),
+        os.path.join(root_dir, "strategies", "assets", "backtest-cagr-chart-v2.svg")
     ]
     generate_svg_chart(start_dt.year, end_dt.year, stats_dict, chart_paths)
 
