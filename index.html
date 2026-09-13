@@ -355,9 +355,9 @@
           '      </div>',
           '    </div>',
           '  </div>',
-          '  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 20px;">',
+          '  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 12px;">',
           '    <div style="background: #ffffff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 16px;">',
-          '      <div style="font-size: 13.5px; font-weight: 700; color: #1d4ed8; margin-bottom: 10px;">공격수: TIGER 미국나스닥100레버리지 (262330)</div>',
+          '      <div style="font-size: 13.5px; font-weight: 700; color: #1d4ed8; margin-bottom: 10px;">공격수: TIGER 미국나스닥100레버리지 (418660)</div>',
           '      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">',
           '        <div>',
           '          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 2px;">보유 수량</span>',
@@ -365,7 +365,7 @@
           '        </div>',
           '        <div>',
           '          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 2px;">현재가 (원)</span>',
-          '          <input type="number" id="' + idPrefix + 'qld_price" value="23500" step="100" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
+          '          <input type="number" id="' + idPrefix + 'qld_price" value="37305" step="100" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
           '        </div>',
           '      </div>',
           '      <div style="font-size: 12px; color: #475569; margin-top: 8px;">평가금액: <strong id="' + idPrefix + 'qld_eval" style="color:#0f172a;">-</strong></div>',
@@ -375,15 +375,19 @@
           '      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">',
           '        <div>',
           '          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 2px;">보유 수량</span>',
-          '          <input type="number" id="' + idPrefix + 'schd_qty" value="400" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
+          '          <input type="number" id="' + idPrefix + 'schd_qty" value="550" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
           '        </div>',
           '        <div>',
           '          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 2px;">현재가 (원)</span>',
-          '          <input type="number" id="' + idPrefix + 'schd_price" value="12500" step="50" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
+          '          <input type="number" id="' + idPrefix + 'schd_price" value="14500" step="50" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
           '        </div>',
           '      </div>',
           '      <div style="font-size: 12px; color: #475569; margin-top: 8px;">평가금액: <strong id="' + idPrefix + 'schd_eval" style="color:#0f172a;">-</strong></div>',
           '    </div>',
+          '  </div>',
+          '  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding: 0 4px; font-size: 11.5px; color: #64748b;">',
+          '    <span id="' + idPrefix + 'price_sync_badge">시장 종가 연동 중...</span>',
+          '    <button type="button" class="btn-refresh-prices" style="background: none; border: none; color: #2563eb; cursor: pointer; text-decoration: underline; font-size: 11.5px; font-weight: 600;">최신 종가 다시 불러오기</button>',
           '  </div>',
           '  <div style="background: #f8fafc; border-radius: 12px; padding: 18px; border: 1px solid #e2e8f0;">',
           '    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">',
@@ -669,7 +673,46 @@
           });
         });
 
+        function loadLatestPrices() {
+          var syncBadge = document.getElementById(idPrefix + 'price_sync_badge');
+          fetch('assets/data/latest-prices.json?v=' + Date.now())
+            .then(function(res) {
+              if (!res.ok) throw new Error('Network response was not ok');
+              return res.json();
+            })
+            .then(function(data) {
+              if (data && data.prices) {
+                var pQld = data.prices['418660'];
+                var pSchd = data.prices['458730'];
+                if (pQld && pQld.price) {
+                  document.getElementById(idPrefix + 'qld_price').value = pQld.price;
+                }
+                if (pSchd && pSchd.price) {
+                  document.getElementById(idPrefix + 'schd_price').value = pSchd.price;
+                }
+                if (syncBadge && data.updated_at) {
+                  syncBadge.innerHTML = '최근 시장 종가 연동 완료 (' + data.updated_at + ')';
+                  syncBadge.style.color = '#16a34a';
+                }
+                calculate();
+              }
+            })
+            .catch(function(err) {
+              if (syncBadge) {
+                syncBadge.innerText = '최근 시장 종가 기준 세팅 완료 (직접 편집 가능)';
+              }
+            });
+        }
+
+        target.querySelectorAll('.btn-refresh-prices').forEach(function(btn) {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            loadLatestPrices();
+          });
+        });
+
         calculate();
+        loadLatestPrices();
       });
     };
 
