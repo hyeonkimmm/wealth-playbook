@@ -9,109 +9,244 @@
 
   <!-- Open Graph for SNS / KakaoTalk Preview -->
   <meta property="og:title" content="Wealth Playbook | 미국주식 실전 투자 지침서">
-  <meta property="og:description" content="뇌동매매를 차단하는 규칙 기반 투자 전략 모음 (바벨 전략, 무한매수법 등)">
+  <meta property="og:description" content="뇌동매매를 차단하는 규칙 기반 투자 전략 모음 - Created by hyeonkimmm">
   <meta property="og:type" content="website">
 
-  <!-- Docsify Theme -->
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <!-- Pretendard: 가장 인기 있고 가독성이 뛰어난 한국 표준 산세리프 웹폰트 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+
+  <!-- Docsify Themeable: 가장 널리 쓰이는 모던 미니멀 테마 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css">
+
   <style>
     :root {
-      --theme-color: #2563eb;
+      /* Typography */
+      --base-font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Segoe UI", sans-serif;
+      --code-font-family: "JetBrains Mono", Menlo, Consolas, Monaco, monospace;
+      --base-font-size: 15.5px;
+      --base-line-height: 1.8;
+      
+      /* Color Palette (Modern Slate / Indigo) */
+      --theme-color: #1d4ed8;
+      --base-color: #1e293b;
+      --base-background-color: #ffffff;
+      
+      /* Sidebar */
+      --sidebar-width: 290px;
+      --sidebar-background: #f8fafc;
+      --sidebar-border-color: #e2e8f0;
+      --sidebar-name-color: #0f172a;
+      --sidebar-nav-link-color: #475569;
+      --sidebar-nav-link-color--active: #1d4ed8;
+      --sidebar-nav-link-font-weight--active: 700;
+      
+      /* Headings */
+      --heading-color: #0f172a;
+      --heading-h1-font-weight: 800;
+      --heading-h2-font-weight: 700;
+      --heading-h3-font-weight: 600;
+      
+      /* Blockquote & Tables */
+      --blockquote-border-color: #3b82f6;
+      --blockquote-background: #eff6ff;
+      --table-cell-border-color: #e2e8f0;
+      --table-head-background: #f1f5f9;
+      --table-head-color: #0f172a;
     }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Segoe UI", Roboto, sans-serif;
-      line-height: 1.75;
-      color: #1f2937;
-      background-color: #ffffff;
+      font-family: var(--base-font-family);
+      letter-spacing: -0.015em;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .sidebar {
-      background-color: #f8fafc;
-      border-right: 1px solid #e2e8f0;
-    }
-    .sidebar-nav strong {
-      color: #0f172a;
-      font-size: 0.95rem;
-    }
-    .sidebar-nav ul li a {
-      color: #4b5563;
-      font-size: 0.9rem;
-    }
-    .sidebar-nav ul li.active > a {
-      color: #2563eb;
-      font-weight: 700;
+
+    /* 사이드바 상단 브랜드 카드 */
+    .app-name {
+      padding: 16px 0 10px;
     }
     .app-name-link {
-      font-weight: 800;
-      font-size: 1.15rem;
-      color: #1e3a8a !important;
+      font-size: 1.15rem !important;
+      font-weight: 800 !important;
+      letter-spacing: -0.02em;
+      color: #0f172a !important;
+      text-decoration: none;
+      display: block;
     }
+    .brand-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #1d4ed8;
+      background: #dbeafe;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      margin-top: 4px;
+      letter-spacing: 0;
+    }
+    .brand-sub {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    /* 사이드바 네비게이션 스타일링 */
+    .sidebar-nav {
+      padding-bottom: 90px;
+    }
+    .sidebar-nav > ul > li > p {
+      font-size: 11.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .sidebar-nav ul li a {
+      font-size: 13.5px;
+      line-height: 1.5;
+      padding: 5px 0;
+      transition: color 0.15s ease;
+    }
+    .sidebar-nav ul li.active > a {
+      color: #1d4ed8 !important;
+      font-weight: 700 !important;
+    }
+
+    /* 좌하단 고정 작성자 푸터 */
+    .sidebar-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: var(--sidebar-width);
+      padding: 14px 20px;
+      background: #f1f5f9;
+      border-top: 1px solid #e2e8f0;
+      box-sizing: border-box;
+      z-index: 100;
+    }
+    .sidebar-footer-author {
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sidebar-footer-link {
+      font-size: 11.5px;
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .sidebar-footer-link:hover {
+      text-decoration: underline;
+    }
+    .sidebar-footer-slogan {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* 본문 마크다운 타이포그래피 정돈 */
     .markdown-section {
       max-width: 840px;
-      margin: 0 auto;
-      padding: 30px 24px 80px;
+      padding: 36px 32px 60px;
     }
     .markdown-section h1 {
-      font-size: 1.85rem;
-      font-weight: 800;
-      color: #0f172a;
-      border-bottom: 2px solid #e2e8f0;
-      padding-bottom: 12px;
+      font-size: 2rem;
+      letter-spacing: -0.03em;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 14px;
       margin-top: 1.5rem;
     }
     .markdown-section h2 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: #1e293b;
-      margin-top: 2.2rem;
+      font-size: 1.45rem;
+      letter-spacing: -0.02em;
       border-bottom: 1px solid #f1f5f9;
-      padding-bottom: 8px;
+      padding-bottom: 10px;
+      margin-top: 2.4rem;
     }
     .markdown-section h3 {
-      font-size: 1.12rem;
-      font-weight: 600;
-      color: #334155;
-      margin-top: 1.6rem;
+      font-size: 1.18rem;
+      letter-spacing: -0.015em;
+      margin-top: 1.8rem;
     }
     .markdown-section blockquote {
       border-left: 4px solid #2563eb;
       background-color: #eff6ff;
-      padding: 12px 18px;
-      margin: 1.5rem 0;
       border-radius: 0 8px 8px 0;
-      color: #1e40af;
-    }
-    .markdown-section table {
-      display: table;
-      width: 100%;
-      margin: 1.5rem 0;
-      border-collapse: collapse;
-    }
-    .markdown-section table th {
-      background-color: #f1f5f9;
-      color: #1e293b;
-      font-weight: 600;
-      padding: 10px 14px;
-      border: 1px solid #cbd5e1;
-    }
-    .markdown-section table td {
-      padding: 10px 14px;
-      border: 1px solid #e2e8f0;
-    }
-    .markdown-section hr {
-      border: 0;
-      border-top: 1px solid #e2e8f0;
-      margin: 2.5rem 0;
+      padding: 14px 20px;
+      margin: 1.6rem 0;
+      color: #1e3a8a;
     }
     .markdown-section code {
+      font-family: var(--code-font-family);
+      font-size: 0.88em;
       background-color: #f1f5f9;
       color: #0f172a;
       padding: 2px 6px;
       border-radius: 4px;
-      font-size: 0.9em;
     }
+    .markdown-section table {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* 본문 우하단 작성자 푸터 카드 */
+    .page-footer-card {
+      margin-top: 4rem;
+      padding: 24px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .page-footer-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .page-footer-desc {
+      font-size: 12.5px;
+      color: #64748b;
+      margin-top: 3px;
+    }
+    .page-footer-meta {
+      text-align: right;
+    }
+    .page-footer-author {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .page-footer-author a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    .page-footer-author a:hover {
+      text-decoration: underline;
+    }
+    .page-footer-tag {
+      font-size: 11.5px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* 검색창 모던화 */
     .search input {
-      border-radius: 6px !important;
       border: 1px solid #cbd5e1 !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      font-family: var(--base-font-family) !important;
+      font-size: 13px !important;
+      background: #ffffff !important;
     }
   </style>
 </head>
@@ -119,25 +254,64 @@
   <div id="app">Wealth Playbook을 불러오는 중...</div>
   <script>
     window.$docsify = {
-      name: 'Wealth Playbook',
-      repo: '',
+      name: '<div class="app-name"><a href="#/" class="app-name-link">Wealth Playbook</a><span class="brand-badge">v1.0.0</span><div class="brand-sub">규칙 기반 미국주식 투자 매뉴얼</div></div>',
       loadSidebar: true,
-      subMaxLevel: 2,
+      subMaxLevel: 3,
       auto2top: true,
       homepage: 'README.md',
       search: {
         maxAge: 86400000,
         paths: 'auto',
-        placeholder: '전략 검색...',
+        placeholder: '전략 및 용어 검색...',
         noData: '검색 결과가 없습니다.',
-        depth: 3
-      }
+        depth: 4
+      },
+      plugins: [
+        // 본문 하단 작성자 푸터 카드 자동 삽입 플러그인
+        function(hook) {
+          hook.afterEach(function(html) {
+            var footerHtml = [
+              '<hr style="border:0; border-top:1px solid #e2e8f0; margin: 3.5rem 0 2rem;">',
+              '<div class="page-footer-card">',
+              '  <div>',
+              '    <div class="page-footer-title">Wealth Playbook</div>',
+              '    <div class="page-footer-desc">시장의 소음과 뇌동매매를 배제한 규칙 기반 실전 지침서</div>',
+              '  </div>',
+              '  <div class="page-footer-meta">',
+              '    <div class="page-footer-author">Created by <a href="https://github.com/hyeonkimmm" target="_blank" rel="noopener">hyeonkimmm</a></div>',
+              '    <div class="page-footer-tag">Rules Over Emotions</div>',
+              '  </div>',
+              '</div>'
+            ].join('\n');
+            return html + footerHtml;
+          });
+
+          // 좌하단 사이드바 고정 작성자 정보 삽입
+          hook.ready(function() {
+            var sidebar = document.querySelector('.sidebar');
+            if (sidebar && !document.querySelector('.sidebar-footer')) {
+              var sidebarFooter = document.createElement('div');
+              sidebarFooter.className = 'sidebar-footer';
+              sidebarFooter.innerHTML = [
+                '<div class="sidebar-footer-author">',
+                '  <span>Author</span>',
+                '  <a class="sidebar-footer-link" href="https://github.com/hyeonkimmm" target="_blank" rel="noopener">@hyeonkimmm</a>',
+                '</div>',
+                '<div class="sidebar-footer-slogan">Rules Over Emotions</div>'
+              ].join('\n');
+              sidebar.appendChild(sidebarFooter);
+            }
+          });
+        }
+      ]
     };
   </script>
-  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+  <!-- Docsify Themeable Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
   <!-- Search Plugin -->
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
   <!-- Copy Code Plugin -->
-  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
 </body>
 </html>
