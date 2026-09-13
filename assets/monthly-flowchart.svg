@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 16px; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 18px; font-weight: 800; fill: #0f172a; }
+      .step-box { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 10px; }
+      .step-num { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 11px; font-weight: 800; fill: #2563eb; }
+      .step-title { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 14px; font-weight: 700; fill: #0f172a; }
+      .step-desc { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 11.5px; fill: #475569; line-height: 1.4; }
+      .arrow { fill: #94a3b8; }
+    </style>
+  </defs>
+
+  <rect x="2" y="2" width="796" height="236" class="bg"/>
+  <text x="32" y="38" class="title">월급날 기계적 적립 프로세스 (월 1회 실행)</text>
+
+  <!-- Step 1 -->
+  <g transform="translate(32, 60)">
+    <rect x="0" y="0" width="160" height="150" class="step-box"/>
+    <text x="16" y="28" class="step-num">STEP 01</text>
+    <text x="16" y="52" class="step-title">월 1회 앱 접속</text>
+    <text x="16" y="80" class="step-desc">• 매월 정해진 급여일</text>
+    <text x="16" y="100" class="step-desc">• 딱 하루만 MTS 접속</text>
+    <text x="16" y="120" class="step-desc">• 장중 시세 감시 금지</text>
+  </g>
+
+  <!-- Arrow 1 -->
+  <polygon points="204,135 214,135 214,130 224,140 214,150 214,145 204,145" class="arrow"/>
+
+  <!-- Step 2 -->
+  <g transform="translate(236, 60)">
+    <rect x="0" y="0" width="160" height="150" class="step-box"/>
+    <text x="16" y="28" class="step-num">STEP 02</text>
+    <text x="16" y="52" class="step-title">비중 현황 확인</text>
+    <text x="16" y="80" class="step-desc">• QLD 평가금액 확인</text>
+    <text x="16" y="100" class="step-desc">• SCHD 평가금액 확인</text>
+    <text x="16" y="120" class="step-desc">• 7:3 대비 비율 계산</text>
+  </g>
+
+  <!-- Arrow 2 -->
+  <polygon points="408,135 418,135 418,130 428,140 418,150 418,145 408,145" class="arrow"/>
+
+  <!-- Step 3 -->
+  <g transform="translate(440, 60)">
+    <rect x="0" y="0" width="160" height="150" class="step-box"/>
+    <text x="16" y="28" class="step-num">STEP 03</text>
+    <text x="16" y="52" class="step-title">부족한 쪽 매수</text>
+    <text x="16" y="80" class="step-desc">• 적립금 + 월배당금</text>
+    <text x="16" y="100" class="step-desc">• 비중 부족 종목 매수</text>
+    <text x="16" y="120" class="step-desc">• 매도 없이 비율 맞춤</text>
+  </g>
+
+  <!-- Arrow 3 -->
+  <polygon points="612,135 622,135 622,130 632,140 622,150 622,145 612,145" class="arrow"/>
+
+  <!-- Step 4 -->
+  <g transform="translate(644, 60)">
+    <rect x="0" y="0" width="124" height="150" class="step-box" stroke="#2563eb"/>
+    <text x="14" y="28" class="step-num" fill="#16a34a">STEP 04</text>
+    <text x="14" y="52" class="step-title">7:3 복구 완료</text>
+    <text x="14" y="80" class="step-desc">• 앱 즉시 종료</text>
+    <text x="14" y="100" class="step-desc">• 다음 달까지 방치</text>
+    <text x="14" y="120" class="step-desc">• 일상에 집중</text>
+  </g>
+</svg>
