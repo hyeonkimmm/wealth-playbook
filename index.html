@@ -261,6 +261,7 @@
       subMaxLevel: 3,
       auto2top: true,
       homepage: 'README.md',
+      executeScript: true,
       plugins: [
         // 본문 하단 작성자 푸터 카드 자동 삽입 플러그인
         function(hook) {
@@ -297,8 +298,240 @@
               sidebar.appendChild(sidebarFooter);
             }
           });
+
+          // 페이지 로드 시마다 리밸런싱 계산기 컴포넌트 자동 마운트
+          hook.doneEach(function() {
+            if (window.mountWealthCalculators) {
+              window.mountWealthCalculators();
+            }
+          });
         }
       ]
+    };
+
+    // 전역 리밸런싱 계산기 마운트 함수
+    window.mountWealthCalculators = function() {
+      var targets = document.querySelectorAll('.wealth-rebalance-calc-mount');
+      if (!targets || targets.length === 0) return;
+
+      targets.forEach(function(target, idx) {
+        var idPrefix = 'calc_' + idx + '_';
+        var html = [
+          '<div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 1.8rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.04); font-family: -apple-system, BlinkMacSystemFont, Pretendard, sans-serif;">',
+          '  <div style="font-size: 17px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">실시간 월급날 리밸런싱 계산기</div>',
+          '  <div style="font-size: 13px; color: #64748b; margin-bottom: 20px;">현재 보유 수량과 이번 달 적립금을 입력하면 1초 만에 최적의 매수·스위칭 수량을 계산합니다.</div>',
+          '  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 20px;">',
+          '    <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0;">',
+          '      <label style="display: block; font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">당월 투자 가능 금액 (월급 + 배당금)</label>',
+          '      <div style="display: flex; align-items: center;">',
+          '        <input type="number" id="' + idPrefix + 'cash" value="1000000" step="50000" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; font-weight: 700; color: #0f172a; outline: none;"/>',
+          '        <span style="margin-left: 6px; font-weight: 700; color: #64748b; font-size: 13px;">원</span>',
+          '      </div>',
+          '    </div>',
+          '    <div style="background: #f8fafc; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0;">',
+          '      <label style="display: block; font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 6px;">전략 비중 및 밴드 옵션</label>',
+          '      <div style="display: flex; gap: 8px;">',
+          '        <select id="' + idPrefix + 'ratio" style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 600;">',
+          '          <option value="0.7">70 : 30 (표준 바벨)</option>',
+          '          <option value="0.6">60 : 40 (중도형)</option>',
+          '          <option value="0.5">50 : 50 (안정형)</option>',
+          '        </select>',
+          '        <select id="' + idPrefix + 'band" style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 600;">',
+          '          <option value="0.10">±10%p (권장: 80%/60%)</option>',
+          '          <option value="0.15">±15%p (85%/55%)</option>',
+          '          <option value="0.20">±20%p (90%/50%)</option>',
+          '        </select>',
+          '      </div>',
+          '    </div>',
+          '  </div>',
+          '  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 20px;">',
+          '    <div style="background: #ffffff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 16px;">',
+          '      <div style="font-size: 13.5px; font-weight: 700; color: #1d4ed8; margin-bottom: 10px;">공격수: TIGER 미국나스닥100레버리지 (262330)</div>',
+          '      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">',
+          '        <div>',
+          '          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 2px;">보유 수량</span>',
+          '          <input type="number" id="' + idPrefix + 'qld_qty" value="500" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
+          '        </div>',
+          '        <div>',
+          '          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 2px;">현재가 (원)</span>',
+          '          <input type="number" id="' + idPrefix + 'qld_price" value="23500" step="100" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
+          '        </div>',
+          '      </div>',
+          '      <div style="font-size: 12px; color: #475569; margin-top: 8px;">평가금액: <strong id="' + idPrefix + 'qld_eval" style="color:#0f172a;">-</strong></div>',
+          '    </div>',
+          '    <div style="background: #ffffff; border: 1.5px solid #bbf7d0; border-radius: 10px; padding: 16px;">',
+          '      <div style="font-size: 13.5px; font-weight: 700; color: #15803d; margin-bottom: 10px;">수비수: TIGER 미국배당다우존스 (458730)</div>',
+          '      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">',
+          '        <div>',
+          '          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 2px;">보유 수량</span>',
+          '          <input type="number" id="' + idPrefix + 'schd_qty" value="400" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
+          '        </div>',
+          '        <div>',
+          '          <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 2px;">현재가 (원)</span>',
+          '          <input type="number" id="' + idPrefix + 'schd_price" value="12500" step="50" style="width: 100%; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;"/>',
+          '        </div>',
+          '      </div>',
+          '      <div style="font-size: 12px; color: #475569; margin-top: 8px;">평가금액: <strong id="' + idPrefix + 'schd_eval" style="color:#0f172a;">-</strong></div>',
+          '    </div>',
+          '  </div>',
+          '  <div style="background: #f8fafc; border-radius: 12px; padding: 18px; border: 1px solid #e2e8f0;">',
+          '    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">',
+          '      <span style="font-size: 12.5px; font-weight: 700; color: #475569;">현재 포트폴리오 비중</span>',
+          '      <span style="font-size: 12px; color: #64748b;">총 자산(적립금 포함): <strong id="' + idPrefix + 'total_val" style="color:#0f172a; font-size:13.5px;">-</strong></span>',
+          '    </div>',
+          '    <div style="height: 24px; background: #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; margin-bottom: 14px;">',
+          '      <div id="' + idPrefix + 'bar_qld" style="background: #2563eb; color: #ffffff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: width 0.2s ease;">-</div>',
+          '      <div id="' + idPrefix + 'bar_schd" style="background: #16a34a; color: #ffffff; font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: width 0.2s ease;">-</div>',
+          '    </div>',
+          '    <div id="' + idPrefix + 'action_card" style="background: #ffffff; border-radius: 8px; padding: 16px; border-left: 5px solid #2563eb; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">',
+          '      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">',
+          '        <span id="' + idPrefix + 'status_badge" style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; background: #dbeafe; color: #1d4ed8;">상태</span>',
+          '        <span id="' + idPrefix + 'status_title" style="font-size: 14px; font-weight: 800; color: #0f172a;">-</span>',
+          '      </div>',
+          '      <div id="' + idPrefix + 'action_detail" style="font-size: 13.5px; font-weight: 600; color: #1e293b; line-height: 1.6;">-</div>',
+          '      <div id="' + idPrefix + 'after_sim" style="font-size: 11.5px; color: #64748b; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0;">-</div>',
+          '    </div>',
+          '  </div>',
+          '</div>'
+        ].join('\n');
+
+        target.innerHTML = html;
+
+        function fmt(n) { return Math.round(n).toLocaleString() + '원'; }
+
+        function calculate() {
+          var cash = parseFloat(document.getElementById(idPrefix + 'cash').value) || 0;
+          var targetRatio = parseFloat(document.getElementById(idPrefix + 'ratio').value) || 0.7;
+          var band = parseFloat(document.getElementById(idPrefix + 'band').value) || 0.10;
+          var qldQty = parseFloat(document.getElementById(idPrefix + 'qld_qty').value) || 0;
+          var qldPrice = parseFloat(document.getElementById(idPrefix + 'qld_price').value) || 0;
+          var schdQty = parseFloat(document.getElementById(idPrefix + 'schd_qty').value) || 0;
+          var schdPrice = parseFloat(document.getElementById(idPrefix + 'schd_price').value) || 0;
+
+          var qldVal = qldQty * qldPrice;
+          var schdVal = schdQty * schdPrice;
+          var totalStock = qldVal + schdVal;
+          var totalAll = totalStock + cash;
+
+          document.getElementById(idPrefix + 'qld_eval').innerText = fmt(qldVal);
+          document.getElementById(idPrefix + 'schd_eval').innerText = fmt(schdVal);
+          document.getElementById(idPrefix + 'total_val').innerText = fmt(totalAll);
+
+          if (totalStock === 0) {
+            document.getElementById(idPrefix + 'bar_qld').style.width = '70%';
+            document.getElementById(idPrefix + 'bar_qld').innerText = '70%';
+            document.getElementById(idPrefix + 'bar_schd').style.width = '30%';
+            document.getElementById(idPrefix + 'bar_schd').innerText = '30%';
+            return;
+          }
+
+          var curQldPct = qldVal / totalStock;
+          var curSchdPct = schdVal / totalStock;
+          var barW = Math.max(12, Math.min(88, curQldPct * 100));
+
+          document.getElementById(idPrefix + 'bar_qld').style.width = barW + '%';
+          document.getElementById(idPrefix + 'bar_qld').innerText = 'QLD ' + (curQldPct * 100).toFixed(1) + '%';
+          document.getElementById(idPrefix + 'bar_schd').style.width = (100 - barW) + '%';
+          document.getElementById(idPrefix + 'bar_schd').innerText = 'SCHD ' + (curSchdPct * 100).toFixed(1) + '%';
+
+          var card = document.getElementById(idPrefix + 'action_card');
+          var badge = document.getElementById(idPrefix + 'status_badge');
+          var title = document.getElementById(idPrefix + 'status_title');
+          var detail = document.getElementById(idPrefix + 'action_detail');
+          var after = document.getElementById(idPrefix + 'after_sim');
+
+          var upper = targetRatio + band;
+          var lower = targetRatio - band;
+
+          // Case 1: 과열 상승 (80% 이상)
+          if (curQldPct >= upper) {
+            card.style.borderLeftColor = '#dc2626';
+            badge.style.background = '#fee2e2';
+            badge.style.color = '#b91c1c';
+            badge.innerText = '상승 과열 익절 스위칭 트리거';
+            title.innerText = '나스닥 과열: 레버리지 일부를 매도해 배당주로 차익을 확정하세요';
+
+            var targetQldVal = totalAll * targetRatio;
+            var excessQld = qldVal - targetQldVal;
+            var sellQldShares = Math.floor(excessQld / qldPrice);
+            var proceeds = sellQldShares * qldPrice;
+            var buySchdShares = Math.floor((proceeds + cash) / schdPrice);
+
+            detail.innerHTML = '1. <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellQldShares.toLocaleString() + '주</span> 매도하여 약 ' + fmt(proceeds) + ' 수익 확정<br>' +
+                               '2. 매도 대금 + 당월 적립금으로 <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#16a34a; font-size:15px;">' + buySchdShares.toLocaleString() + '주</span> 매수';
+            var nQ = qldVal - proceeds;
+            var nS = schdVal + (buySchdShares * schdPrice);
+            after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ/(nQ+nS))*100).toFixed(1) + '% : SCHD ' + ((nS/(nQ+nS))*100).toFixed(1) + '% (목표 비율 복구 완료)';
+          }
+          // Case 2: 시장 폭락 (60% 이하)
+          else if (curQldPct <= lower) {
+            card.style.borderLeftColor = '#16a34a';
+            badge.style.background = '#dcfce7';
+            badge.style.color = '#15803d';
+            badge.innerText = '시장 폭락 저가매수 스위칭 트리거';
+            title.innerText = '나스닥 폭락: 덜 떨어진 배당주를 팔아 레버리지 평단을 대폭 낮추세요';
+
+            var targetSchdVal = totalAll * (1 - targetRatio);
+            var excessSchd = schdVal - targetSchdVal;
+            var sellSchdShares = Math.floor(excessSchd / schdPrice);
+            var proceeds = sellSchdShares * schdPrice;
+            var buyQldShares = Math.floor((proceeds + cash) / qldPrice);
+
+            detail.innerHTML = '1. <strong>TIGER 미국배당다우존스</strong>를 <span style="color:#dc2626; font-size:15px;">' + sellSchdShares.toLocaleString() + '주</span> 매도<br>' +
+                               '2. 매도 대금 + 당월 적립금으로 <strong>TIGER 미국나스닥100레버리지</strong>를 <span style="color:#2563eb; font-size:15px;">' + buyQldShares.toLocaleString() + '주</span> 바닥 집중 매수';
+            var nQ = qldVal + (buyQldShares * qldPrice);
+            var nS = schdVal - proceeds;
+            after.innerText = '스위칭 후 예상 비중: QLD ' + ((nQ/(nQ+nS))*100).toFixed(1) + '% : SCHD ' + ((nS/(nQ+nS))*100).toFixed(1) + '% (반등 탄력 극대화)';
+          }
+          // Case 3: 정상 범위 (스마트 적립)
+          else {
+            card.style.borderLeftColor = '#2563eb';
+            badge.style.background = '#dbeafe';
+            badge.style.color = '#1d4ed8';
+            badge.innerText = '정상 밴드 내 (스마트 적립)';
+            title.innerText = '기존 주식 매도 없이, 이번 달 적립금으로 부족한 종목만 채워 넣으세요';
+
+            var tQ = totalAll * targetRatio;
+            var tS = totalAll * (1 - targetRatio);
+            var nQld = Math.max(0, tQ - qldVal);
+            var nSchd = Math.max(0, tS - schdVal);
+            var aQ = 0, aS = 0;
+            if (nQld + nSchd > 0) {
+              aQ = cash * (nQld / (nQld + nSchd));
+              aS = cash * (nSchd / (nQld + nSchd));
+            } else {
+              aQ = cash * targetRatio;
+              aS = cash * (1 - targetRatio);
+            }
+            var bQ = Math.floor(aQ / qldPrice);
+            var bS = Math.floor(aS / schdPrice);
+
+            if (bQ > 0 && bS > 0) {
+              detail.innerHTML = '• <strong>TIGER 미국나스닥100레버리지:</strong> <span style="color:#2563eb; font-size:15px;">' + bQ.toLocaleString() + '주</span> 매수 (' + fmt(bQ * qldPrice) + ')<br>' +
+                                 '• <strong>TIGER 미국배당다우존스:</strong> <span style="color:#16a34a; font-size:15px;">' + bS.toLocaleString() + '주</span> 매수 (' + fmt(bS * schdPrice) + ')';
+            } else if (bQ > 0) {
+              detail.innerHTML = '이번 달 적립금으로 <strong>TIGER 미국나스닥100레버리지</strong>만 <span style="color:#2563eb; font-size:15px;">' + bQ.toLocaleString() + '주</span> (' + fmt(bQ * qldPrice) + ') 집중 매수하세요.';
+            } else if (bS > 0) {
+              detail.innerHTML = '이번 달 적립금으로 <strong>TIGER 미국배당다우존스</strong>만 <span style="color:#16a34a; font-size:15px;">' + bS.toLocaleString() + '주</span> (' + fmt(bS * schdPrice) + ') 집중 매수하세요.';
+            } else {
+              detail.innerHTML = '적립금이 주가보다 작아 1주 이상 매수할 수 없습니다. 적립금을 계좌 예수금으로 이월하세요.';
+            }
+            var nQ = qldVal + (bQ * qldPrice);
+            var nS = schdVal + (bS * schdPrice);
+            after.innerText = '매수 후 예상 비중: QLD ' + ((nQ/(nQ+nS))*100).toFixed(1) + '% : SCHD ' + ((nS/(nQ+nS))*100).toFixed(1) + '% (7:3 복구 완료)';
+          }
+        }
+
+        ['cash', 'ratio', 'band', 'qld_qty', 'qld_price', 'schd_qty', 'schd_price'].forEach(function(key) {
+          var el = document.getElementById(idPrefix + key);
+          if (el) {
+            el.addEventListener('input', calculate);
+            el.addEventListener('change', calculate);
+          }
+        });
+
+        calculate();
+      });
     };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>

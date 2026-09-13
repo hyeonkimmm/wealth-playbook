@@ -46,6 +46,8 @@
 
 > [월급날 리밸런싱 계산기](calculator.md)를 활용하면, 현재 계좌 잔고를 기준으로 이번 달에 어떤 종목을 몇 주 사야 7:3이 맞춰지는지 1초 만에 계산할 수 있다.
 
+<div class="wealth-rebalance-calc-mount"></div>
+
 ![월급날 기계적 적립 프로세스](assets/monthly-flowchart.svg)
 
 ### 4단계: 비상 리밸런싱 (급등락 시 스위칭)
