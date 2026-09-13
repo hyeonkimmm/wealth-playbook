@@ -206,7 +206,7 @@ def generate_svg_chart(start_yr, end_yr, stats_dict, output_paths):
     <text x="-16" y="{210 - cagr_spy * 4 - 8}" class="val-label">+{cagr_spy:.1f}%</text>
     <rect x="2" y="210" width="28" height="{abs(mdd_spy) * 1.2}" class="bar-mdd" fill="#fca5a5"/>
     <text x="16" y="{210 + abs(mdd_spy) * 1.2 + 16}" class="val-label" fill="#dc2626">{mdd_spy:.1f}%</text>
-    <text x="0" y="328" class="axis-label">SPY (S&P500)</text>
+    <text x="0" y="328" class="axis-label">SPY (S&amp;P 500)</text>
   </g>
 
   <!-- 5. SCHD (배당) -->
