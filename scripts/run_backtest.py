@@ -244,6 +244,7 @@ def main():
     st_qqq = calc_stats(data['QQQ'])
     st_spy = calc_stats(data['SPY'])
     _, st_barbell10 = sim_band(data, 0.10)
+    _, st_barbell15 = sim_band(data, 0.15)
     _, st_barbell20 = sim_band(data, 0.20)
     
     stats_dict = {
@@ -252,12 +253,14 @@ def main():
         'QQQ': st_qqq,
         'SPY': st_spy,
         '7:3_10': st_barbell10,
+        '7:3_15': st_barbell15,
         '7:3_20': st_barbell20
     }
 
     print("\n--- 1. 일시불 거치식 투자 성과 ---")
     rows = [
         ("★ 7:3 바벨 (±10%p)", st_barbell10['total_return'], st_barbell10['cagr'], st_barbell10['mdd'], st_barbell10['ret_2022'], st_barbell10['mdd_2022'], f"{st_barbell10['rebal_count']}회"),
+        ("7:3 바벨 (±15%p)", st_barbell15['total_return'], st_barbell15['cagr'], st_barbell15['mdd'], st_barbell15['ret_2022'], st_barbell15['mdd_2022'], f"{st_barbell15['rebal_count']}회"),
         ("7:3 바벨 (±20%p)", st_barbell20['total_return'], st_barbell20['cagr'], st_barbell20['mdd'], st_barbell20['ret_2022'], st_barbell20['mdd_2022'], f"{st_barbell20['rebal_count']}회"),
         ("QLD (2배 레버리지 100%)", st_qld['total_return'], st_qld['cagr'], st_qld['mdd'], st_qld['ret_2022'], st_qld['mdd_2022'], "-"),
         ("QQQ (나스닥 100 지수)", st_qqq['total_return'], st_qqq['cagr'], st_qqq['mdd'], st_qqq['ret_2022'], st_qqq['mdd_2022'], "-"),
@@ -277,6 +280,7 @@ def main():
     dca_rows = []
     for name, key, band in [
         ("★ 7:3 바벨 (±10%p)", "7:3", 0.10),
+        ("7:3 바벨 (±15%p)", "7:3", 0.15),
         ("7:3 바벨 (±20%p)", "7:3", 0.20),
         ("QLD 적립 (100%)", "QLD", 0),
         ("QQQ 적립 (나스닥 100)", "QQQ", 0),

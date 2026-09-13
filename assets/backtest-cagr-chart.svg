@@ -30,29 +30,29 @@
 
   <!-- 1. QLD 100% -->
   <g transform="translate(105, 0)">
-    <rect x="-30" y="76.98418326725059" width="28" height="133.0158167327494" class="bar-cagr" fill="#93c5fd"/>
-    <text x="-16" y="68.98418326725059" class="val-label">+33.3%</text>
-    <rect x="2" y="210" width="28" height="75.69723565390613" class="bar-mdd"/>
-    <text x="16" y="301.69723565390615" class="val-label" fill="#dc2626">-63.1%</text>
+    <rect x="-30" y="76.98418380654391" width="28" height="133.0158161934561" class="bar-cagr" fill="#93c5fd"/>
+    <text x="-16" y="68.98418380654391" class="val-label">+33.3%</text>
+    <rect x="2" y="210" width="28" height="75.69723808546678" class="bar-mdd"/>
+    <text x="16" y="301.6972380854668" class="val-label" fill="#dc2626">-63.1%</text>
     <text x="0" y="328" class="axis-label">QLD (100%)</text>
   </g>
 
   <!-- 2. 7:3 바벨 전략 (Highlight) -->
   <g transform="translate(250, 0)">
     <rect x="-46" y="70" width="92" height="248" fill="#eff6ff" rx="8" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="3,3"/>
-    <rect x="-30" y="96.00163003525232" width="28" height="113.99836996474768" class="bar-cagr-highlight"/>
-    <text x="-16" y="88.00163003525232" class="val-label" fill="#1d4ed8" font-size="13px">+28.5%</text>
-    <rect x="2" y="210" width="28" height="59.081707775037444" class="bar-mdd" fill="#f87171"/>
-    <text x="16" y="285.08170777503744" class="val-label" fill="#dc2626">-49.2%</text>
+    <rect x="-30" y="96.00162702151435" width="28" height="113.99837297848565" class="bar-cagr-highlight"/>
+    <text x="-16" y="88.00162702151435" class="val-label" fill="#1d4ed8" font-size="13px">+28.5%</text>
+    <rect x="2" y="210" width="28" height="59.08171808601506" class="bar-mdd" fill="#f87171"/>
+    <text x="16" y="285.08171808601503" class="val-label" fill="#dc2626">-49.2%</text>
     <text x="0" y="338" class="axis-label" fill="#1d4ed8">★ 7:3 바벨</text>
   </g>
 
   <!-- 3. QQQ (나스닥 100) -->
   <g transform="translate(395, 0)">
-    <rect x="-30" y="131.42069051204612" width="28" height="78.57930948795388" class="bar-cagr" fill="#94a3b8"/>
-    <text x="-16" y="123.42069051204612" class="val-label">+19.6%</text>
-    <rect x="2" y="210" width="28" height="41.7935791821494" class="bar-mdd" fill="#fca5a5"/>
-    <text x="16" y="267.7935791821494" class="val-label" fill="#dc2626">-34.8%</text>
+    <rect x="-30" y="131.42069570499353" width="28" height="78.57930429500648" class="bar-cagr" fill="#94a3b8"/>
+    <text x="-16" y="123.42069570499353" class="val-label">+19.6%</text>
+    <rect x="2" y="210" width="28" height="41.793587132090906" class="bar-mdd" fill="#fca5a5"/>
+    <text x="16" y="267.7935871320909" class="val-label" fill="#dc2626">-34.8%</text>
     <text x="0" y="328" class="axis-label">QQQ (1배)</text>
   </g>
 
@@ -60,17 +60,17 @@
   <g transform="translate(540, 0)">
     <rect x="-30" y="150.78760945419236" width="28" height="59.21239054580765" class="bar-cagr" fill="#cbd5e1"/>
     <text x="-16" y="142.78760945419236" class="val-label">+14.8%</text>
-    <rect x="2" y="210" width="28" height="29.39567878464825" class="bar-mdd" fill="#fca5a5"/>
-    <text x="16" y="255.39567878464825" class="val-label" fill="#dc2626">-24.5%</text>
+    <rect x="2" y="210" width="28" height="29.395664485810492" class="bar-mdd" fill="#fca5a5"/>
+    <text x="16" y="255.3956644858105" class="val-label" fill="#dc2626">-24.5%</text>
     <text x="0" y="328" class="axis-label">SPY (S&amp;P 500)</text>
   </g>
 
   <!-- 5. SCHD (배당) -->
   <g transform="translate(685, 0)">
-    <rect x="-30" y="161.8849336854899" width="28" height="48.1150663145101" class="bar-cagr" fill="#cbd5e1"/>
-    <text x="-16" y="153.8849336854899" class="val-label">+12.0%</text>
-    <rect x="2" y="210" width="28" height="20.213149362052963" class="bar-mdd" fill="#86efac"/>
-    <text x="16" y="246.21314936205297" class="val-label" fill="#15803d">-16.8%</text>
+    <rect x="-30" y="161.8849369437542" width="28" height="48.11506305624577" class="bar-cagr" fill="#cbd5e1"/>
+    <text x="-16" y="153.8849369437542" class="val-label">+12.0%</text>
+    <rect x="2" y="210" width="28" height="20.213175618025335" class="bar-mdd" fill="#86efac"/>
+    <text x="16" y="246.21317561802533" class="val-label" fill="#15803d">-16.8%</text>
     <text x="0" y="328" class="axis-label">SCHD (배당)</text>
   </g>
 </svg>
