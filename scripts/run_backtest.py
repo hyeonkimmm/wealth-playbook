@@ -162,7 +162,7 @@ def generate_svg_chart(start_yr, end_yr, stats_dict, output_paths):
   <text x="32" y="58" class="subtitle">배당 재투자 반영 실제 수정주가 기반 · 연평균 성장률(CAGR) vs 2022년 하락장 최대낙폭(MDD)</text>
 
   <!-- Legend -->
-  <g transform="translate(560, 26)">
+  <g transform="translate(480, 26)">
     <rect x="0" y="0" width="14" height="14" fill="#2563eb" rx="3"/>
     <text x="20" y="11" class="legend-text">연평균 성장률 (CAGR)</text>
     <rect x="150" y="0" width="14" height="14" fill="#ef4444" rx="3"/>
@@ -306,7 +306,9 @@ def main():
         os.path.join(root_dir, "assets", "backtest-cagr-chart.svg"),
         os.path.join(root_dir, "strategies", "assets", "backtest-cagr-chart.svg"),
         os.path.join(root_dir, "assets", "backtest-cagr-chart-v2.svg"),
-        os.path.join(root_dir, "strategies", "assets", "backtest-cagr-chart-v2.svg")
+        os.path.join(root_dir, "strategies", "assets", "backtest-cagr-chart-v2.svg"),
+        os.path.join(root_dir, "assets", "backtest-cagr-chart-v3.svg"),
+        os.path.join(root_dir, "strategies", "assets", "backtest-cagr-chart-v3.svg")
     ]
     generate_svg_chart(start_dt.year, end_dt.year, stats_dict, chart_paths)
 
