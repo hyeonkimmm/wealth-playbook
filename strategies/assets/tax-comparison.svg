@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 16px; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 18px; font-weight: 800; fill: #0f172a; }
+      .card-gen { fill: #ffffff; stroke: #fca5a5; stroke-width: 1.5; rx: 12px; }
+      .card-isa { fill: #ffffff; stroke: #93c5fd; stroke-width: 1.5; rx: 12px; }
+      .card-header-gen { fill: #fef2f2; rx: 10px; }
+      .card-header-isa { fill: #eff6ff; rx: 10px; }
+      .badge-gen { fill: #ef4444; rx: 6px; }
+      .badge-isa { fill: #2563eb; rx: 6px; }
+      .badge-text { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 11.5px; font-weight: 700; fill: #ffffff; text-anchor: middle; }
+      .card-h-text { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 15px; font-weight: 700; fill: #0f172a; }
+      .row-label { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 12.5px; font-weight: 700; fill: #334155; }
+      .row-desc { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 12px; fill: #64748b; }
+      .vs-circle { fill: #3b82f6; }
+      .vs-text { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 13px; font-weight: 800; fill: #ffffff; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect x="2" y="2" width="796" height="316" class="bg"/>
+  <text x="32" y="40" class="title">국내 상장 해외 ETF 세제 비교 (일반 위탁계좌 vs 중개형 ISA)</text>
+
+  <!-- Left: 일반 위탁계좌 -->
+  <g transform="translate(32, 62)">
+    <rect x="0" y="0" width="345" height="230" class="card-gen"/>
+    <rect x="12" y="12" width="321" height="42" class="card-header-gen"/>
+    <rect x="24" y="22" width="55" height="22" class="badge-gen"/>
+    <text x="51.5" y="37" class="badge-text">비추천</text>
+    <text x="90" y="38" class="card-h-text">일반 위탁계좌</text>
+
+    <!-- Point 1 -->
+    <text x="24" y="82" class="row-label" fill="#dc2626">매매차익/배당금: 15.4% 원천징수</text>
+    <text x="24" y="102" class="row-desc">• 리밸런싱 매도 시마다 배당소득세 차감 (복리 훼손)</text>
+
+    <!-- Point 2 -->
+    <text x="24" y="132" class="row-label" fill="#dc2626">금융소득종합과세 위험 노출</text>
+    <text x="24" y="152" class="row-desc">• 연간 배당+차익 2,000만원 초과 시 최고 49.5% 합산</text>
+
+    <!-- Point 3 -->
+    <text x="24" y="182" class="row-label">손익 통산 불가</text>
+    <text x="24" y="202" class="row-desc">• A종목 손실이어도 B종목 이익이면 세금 그대로 납부</text>
+  </g>
+
+  <!-- VS Badge -->
+  <circle cx="400" cy="177" r="18" class="vs-circle"/>
+  <text x="400" y="182" class="vs-text">VS</text>
+
+  <!-- Right: 중개형 ISA -->
+  <g transform="translate(423, 62)">
+    <rect x="0" y="0" width="345" height="230" class="card-isa"/>
+    <rect x="12" y="12" width="321" height="42" class="card-header-isa"/>
+    <rect x="24" y="22" width="55" height="22" class="badge-isa"/>
+    <text x="51.5" y="37" class="badge-text">필수</text>
+    <text x="90" y="38" class="card-h-text">중개형 ISA 계좌</text>
+
+    <!-- Point 1 -->
+    <text x="24" y="82" class="row-label" fill="#1d4ed8">200만원(서민형 400만원) 비과세</text>
+    <text x="24" y="102" class="row-desc">• 계좌 내 순손익 통산 후 순수익 비과세 적용</text>
+
+    <!-- Point 2 -->
+    <text x="24" y="132" class="row-label" fill="#1d4ed8">초과 수익 9.9% 무조건 분리과세</text>
+    <text x="24" y="152" class="row-desc">• 2천만원이 넘어도 금융소득종합과세 전액 배제</text>
+
+    <!-- Point 3 -->
+    <text x="24" y="182" class="row-label" fill="#16a34a">만기 해지 시 추가 세액공제 혜택</text>
+    <text x="24" y="202" class="row-desc">• 연금 전환 시 전환액 10%(최대 300만원) 세액공제</text>
+  </g>
+</svg>
