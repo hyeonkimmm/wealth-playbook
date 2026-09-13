@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; stroke: #e2e8f0; stroke-width: 1.5; rx: 16px; }
+      .card-atk { fill: #ffffff; stroke: #bfdbfe; stroke-width: 1.5; rx: 12px; }
+      .card-def { fill: #ffffff; stroke: #bbf7d0; stroke-width: 1.5; rx: 12px; }
+      .badge-atk { fill: #2563eb; rx: 6px; }
+      .badge-def { fill: #16a34a; rx: 6px; }
+      .badge-text { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 12px; font-weight: 700; fill: #ffffff; text-anchor: middle; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 18px; font-weight: 800; fill: #0f172a; }
+      .card-title { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 15px; font-weight: 700; fill: #0f172a; }
+      .card-code { font-family: "JetBrains Mono", Menlo, monospace; font-size: 12px; fill: #64748b; }
+      .card-desc { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 12.5px; fill: #475569; line-height: 1.5; }
+      .ratio-text { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 26px; font-weight: 800; }
+      .bar-atk { fill: #2563eb; rx: 6px; }
+      .bar-def { fill: #16a34a; rx: 6px; }
+      .bar-label { font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; font-size: 11px; font-weight: 700; fill: #ffffff; }
+    </style>
+  </defs>
+
+  <!-- Container Box -->
+  <rect x="2" y="2" width="796" height="336" class="bg"/>
+
+  <!-- Main Header -->
+  <text x="32" y="42" class="title">포트폴리오 자산 배분 구조 (70 : 30)</text>
+
+  <!-- Attack Asset Card (70%) -->
+  <rect x="32" y="66" width="356" height="175" class="card-atk"/>
+  <rect x="48" y="82" width="60" height="24" class="badge-atk"/>
+  <text x="78" y="98" class="badge-text">공격수</text>
+  <text x="118" y="100" class="ratio-text" fill="#2563eb">70%</text>
+
+  <text x="48" y="132" class="card-title">TIGER 미국나스닥100레버리지(합성)</text>
+  <text x="48" y="152" class="card-code">종목코드: 262330 · 미국 QLD 역할</text>
+  <text x="48" y="180" class="card-desc">• 나스닥100 지수를 2배로 추종하는 고성장 엔진</text>
+  <text x="48" y="202" class="card-desc">• 장기 우상향 사이클에서 전체 계좌 수익률 견인</text>
+
+  <!-- Defense Asset Card (30%) -->
+  <rect x="412" y="66" width="356" height="175" class="card-def"/>
+  <rect x="428" y="82" width="60" height="24" class="badge-def"/>
+  <text x="458" y="98" class="badge-text">수비수</text>
+  <text x="498" y="100" class="ratio-text" fill="#16a34a">30%</text>
+
+  <text x="428" y="132" class="card-title">TIGER 미국배당다우존스</text>
+  <text x="428" y="152" class="card-code">종목코드: 458730 · 미국 SCHD 역할</text>
+  <text x="428" y="180" class="card-desc">• 미국 우량 배당성장주 기반 안정적 방어력</text>
+  <text x="428" y="202" class="card-desc">• 매달 입금되는 월배당금으로 저가 매수 실탄 공급</text>
+
+  <!-- Visual Allocation Bar -->
+  <g transform="translate(32, 264)">
+    <rect x="0" y="0" width="510" height="36" class="bar-atk"/>
+    <text x="240" y="23" class="bar-label" text-anchor="middle">공격 자산 70% (TIGER 나스닥 레버리지)</text>
+
+    <rect x="518" y="0" width="218" height="36" class="bar-def"/>
+    <text x="627" y="23" class="bar-label" text-anchor="middle">방어 자산 30% (TIGER 미배당)</text>
+  </g>
+</svg>
