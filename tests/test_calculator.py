@@ -75,13 +75,30 @@ def simulate_rebalancing(
     if cur_qld_pct >= upper:
         # 하위 조건 1A: 적립금으로 매도 없이 해결 가능
         if qld_val <= target_qld_val:
-            buy_s = math.floor(cash / schd_price)
-            nq = qld_val
-            ns = schd_val + (buy_s * schd_price)
+            def_q = max(0.0, target_qld_val - qld_val)
+            def_s = max(0.0, target_schd_val - schd_val)
+            if def_q > 0 and def_s > 0:
+                alloc_q = def_q
+                alloc_s = def_s
+            else:
+                alloc_q = 0.0
+                alloc_s = cash
+            b_q = math.floor(alloc_q / qld_price)
+            b_s = math.floor(alloc_s / schd_price)
+            rem = cash - ((b_q * qld_price) + (b_s * schd_price))
+            if rem >= schd_price:
+                b_s += math.floor(rem / schd_price)
+                rem = cash - ((b_q * qld_price) + (b_s * schd_price))
+            if rem >= qld_price and def_q >= def_s:
+                b_q += math.floor(rem / qld_price)
+                rem = cash - ((b_q * qld_price) + (b_s * schd_price))
+            nq = qld_val + (b_q * qld_price)
+            ns = schd_val + (b_s * schd_price)
             return {
                 "status": "OVERWEIGHT_NO_SELL",
                 "sell_qld": 0, "sell_schd": 0,
-                "buy_qld": 0, "buy_schd": buy_s,
+                "buy_qld": b_q, "buy_schd": b_s,
+                "leftover_cash": rem,
                 "post_qld_pct": (nq / (nq + ns)) * 100,
                 "post_schd_pct": (ns / (nq + ns)) * 100
             }
@@ -91,6 +108,7 @@ def simulate_rebalancing(
         proceeds = sell_q * qld_price
         total_avail = proceeds + cash
         buy_s = math.floor(total_avail / schd_price)
+        rem = total_avail - (buy_s * schd_price)
         nq = qld_val - proceeds
         ns = schd_val + (buy_s * schd_price)
         return {
@@ -98,6 +116,7 @@ def simulate_rebalancing(
             "sell_qld": sell_q, "sell_schd": 0,
             "buy_qld": 0, "buy_schd": buy_s,
             "proceeds": proceeds,
+            "leftover_cash": rem,
             "post_qld_pct": (nq / (nq + ns)) * 100,
             "post_schd_pct": (ns / (nq + ns)) * 100
         }
@@ -106,13 +125,30 @@ def simulate_rebalancing(
     elif cur_qld_pct <= lower:
         # 하위 조건 2A: 적립금으로 매도 없이 해결 가능
         if schd_val <= target_schd_val:
-            buy_q = math.floor(cash / qld_price)
-            nq = qld_val + (buy_q * qld_price)
-            ns = schd_val
+            def_q = max(0.0, target_qld_val - qld_val)
+            def_s = max(0.0, target_schd_val - schd_val)
+            if def_q > 0 and def_s > 0:
+                alloc_q = def_q
+                alloc_s = def_s
+            else:
+                alloc_q = cash
+                alloc_s = 0.0
+            b_q = math.floor(alloc_q / qld_price)
+            b_s = math.floor(alloc_s / schd_price)
+            rem = cash - ((b_q * qld_price) + (b_s * schd_price))
+            if rem >= qld_price:
+                b_q += math.floor(rem / qld_price)
+                rem = cash - ((b_q * qld_price) + (b_s * schd_price))
+            if rem >= schd_price and def_s >= def_q:
+                b_s += math.floor(rem / schd_price)
+                rem = cash - ((b_q * qld_price) + (b_s * schd_price))
+            nq = qld_val + (b_q * qld_price)
+            ns = schd_val + (b_s * schd_price)
             return {
                 "status": "UNDERWEIGHT_NO_SELL",
                 "sell_qld": 0, "sell_schd": 0,
-                "buy_qld": buy_q, "buy_schd": 0,
+                "buy_qld": b_q, "buy_schd": b_s,
+                "leftover_cash": rem,
                 "post_qld_pct": (nq / (nq + ns)) * 100,
                 "post_schd_pct": (ns / (nq + ns)) * 100
             }
@@ -122,6 +158,7 @@ def simulate_rebalancing(
         proceeds = sell_s * schd_price
         total_avail = proceeds + cash
         buy_q = math.floor(total_avail / qld_price)
+        rem = total_avail - (buy_q * qld_price)
         nq = qld_val + (buy_q * qld_price)
         ns = schd_val - proceeds
         return {
@@ -129,6 +166,7 @@ def simulate_rebalancing(
             "sell_qld": 0, "sell_schd": sell_s,
             "buy_qld": buy_q, "buy_schd": 0,
             "proceeds": proceeds,
+            "leftover_cash": rem,
             "post_qld_pct": (nq / (nq + ns)) * 100,
             "post_schd_pct": (ns / (nq + ns)) * 100
         }
@@ -209,10 +247,11 @@ def test_initial_start_zero_stocks():
 
 
 def test_overweight_with_large_cash_no_sell():
-    """시나리오 2: 주식 비중은 85% 과열이나 적립금이 커서 매도 없이 해결 가능한 경우 (버그 방지 검증)"""
+    """시나리오 2: 주식 비중은 85% 과열이나 적립금이 커서 매도 없이 양쪽 배분 매수로 70:30 복구하는 경우"""
     # QLD: 36주 * 23,500 = 846,000원 (84.9%)
     # SCHD: 12주 * 12,500 = 150,000원 (15.1%)
-    # 적립금: 1,000,000원 -> 총자산 1,996,000원, 목표 QLD는 1,397,200원이므로 현재 QLD가 오히려 부족함!
+    # 적립금: 1,000,000원 -> 총자산 1,996,000원, 목표 QLD 1,397,200원, 목표 SCHD 598,800원
+    # 부족액: QLD +551,200원, SCHD +448,800원
     res = simulate_rebalancing(
         cash=1_000_000, target_ratio=0.7, band=0.10,
         qld_qty=36, qld_price=23_500,
@@ -222,11 +261,12 @@ def test_overweight_with_large_cash_no_sell():
     # 절대 매도가 발생해서는 안 됨 (음수 매도 방지)
     assert res["sell_qld"] == 0
     assert res["sell_schd"] == 0
-    # 적립금 전액으로 SCHD만 매수 (1M / 12500 = 80주)
-    assert res["buy_schd"] == 80
-    assert res["buy_qld"] == 0
-    # 매수 후 비중이 85%에서 정상 범위(40~50%)로 완화되었는지 검증
-    assert res["post_qld_pct"] < 80.0
+    # 적립금으로 양쪽 부족분을 균형 배분 매수
+    assert res["buy_qld"] > 0
+    assert res["buy_schd"] > 0
+    # 매수 후 비중이 정확히 70:30 근방으로 수렴 (69.0% ~ 71.0%)
+    assert 69.0 <= res["post_qld_pct"] <= 71.0
+    assert 29.0 <= res["post_schd_pct"] <= 31.0
 
 
 def test_overweight_true_switching_large_portfolio():
@@ -250,10 +290,10 @@ def test_overweight_true_switching_large_portfolio():
 
 
 def test_underweight_with_large_cash_no_sell():
-    """시나리오 4: QLD 비중이 55% 폭락 구간이나 적립금만으로 바닥 매수하여 매도 없이 해결 가능한 경우"""
+    """시나리오 4: QLD 비중이 55% 폭락 구간이나 적립금이 커서 매도 없이 양쪽 배분 매수로 70:30 복구하는 경우"""
     # QLD: 20주 * 23,500 = 470,000원 (55.6%)
     # SCHD: 30주 * 12,500 = 375,000원 (44.4%)
-    # 적립금: 1,000,000원 -> 총자산 1,845,000원, 목표 SCHD 553,500원 > 현재 SCHD(37.5만 원)
+    # 적립금: 1,000,000원 -> 총자산 1,845,000원
     res = simulate_rebalancing(
         cash=1_000_000, target_ratio=0.7, band=0.10,
         qld_qty=20, qld_price=23_500,
@@ -262,11 +302,31 @@ def test_underweight_with_large_cash_no_sell():
     assert res["status"] == "UNDERWEIGHT_NO_SELL"
     assert res["sell_qld"] == 0
     assert res["sell_schd"] == 0
-    # 적립금 전액으로 QLD만 바닥 매수 (1M / 23500 = 42주)
-    assert res["buy_qld"] == 42
-    assert res["buy_schd"] == 0
-    # 매수 후 QLD 비중이 70% 근방으로 상승
-    assert res["post_qld_pct"] >= 70.0
+    # 적립금으로 양쪽 부족분을 균형 배분 매수
+    assert res["buy_qld"] > 0
+    assert res["buy_schd"] > 0
+    # 매수 후 QLD 비중이 70% 근방으로 정확히 복구
+    assert 69.0 <= res["post_qld_pct"] <= 71.0
+    assert 29.0 <= res["post_schd_pct"] <= 31.0
+
+
+def test_windfall_cash_allocation_convergence():
+    """시나리오 4-1: 극단적으로 큰 적립금(예: 1억 원) 유입 시에도 70:30 비율이 무너지지 않고 수렴하는지 검증"""
+    res = simulate_rebalancing(
+        cash=100_000_000, target_ratio=0.7, band=0.10,
+        qld_qty=100, qld_price=23_500,  # 2.35M
+        schd_qty=100, schd_price=12_500  # 1.25M
+    )
+    # 초기 비중: QLD 65.3% : SCHD 34.7%
+    assert res["status"] == "NORMAL_SMART_ACCUMULATION"
+    assert res["sell_qld"] == 0
+    assert res["sell_schd"] == 0
+    assert res["buy_qld"] > 0
+    assert res["buy_schd"] > 0
+    # 1억 원 유입 후 최종 비중이 정밀하게 69.8% ~ 70.2%에 수렴하는지 검증
+    assert 69.8 <= res["post_qld_pct"] <= 70.2
+    assert 29.8 <= res["post_schd_pct"] <= 30.2
+
 
 
 def test_underweight_true_switching_large_portfolio():
@@ -551,4 +611,64 @@ def test_e2e_quick_cash_buttons(local_server):
         assert page.locator("#calc_0_cash").input_value() == "1600000"
 
         browser.close()
+
+
+def test_e2e_apply_and_undo_simulation(local_server):
+    """E2E 테스트 5: 추천 매매 적용 버튼 클릭 시 계좌 수량 가상 갱신 및 되돌리기(실행 취소) 검증"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(local_server)
+        page.wait_for_selector(".wealth-rebalance-calc-mount")
+
+        # 1. 초기 상태 입력: QLD 1,800주, SCHD 616주, 예수금 1,000,000원 (과열 스위칭 상태)
+        page.fill("#calc_0_qld_qty", "1800")
+        page.fill("#calc_0_schd_qty", "616")
+        page.fill("#calc_0_cash", "1000000")
+        page.wait_for_timeout(300)
+
+        apply_btn = page.locator("#calc_0_btn_apply_sim")
+        undo_btn = page.locator("#calc_0_btn_undo_sim")
+        sim_banner = page.locator("#calc_0_sim_banner")
+
+        # 적용 버튼 표시, 되돌리기 및 배너 숨김 확인
+        assert apply_btn.is_visible()
+        assert not undo_btn.is_visible()
+        assert not sim_banner.is_visible()
+
+        # 2. 적용하기 버튼 클릭
+        apply_btn.click()
+        page.wait_for_timeout(300)
+
+        # 배너 표시 및 되돌리기 버튼 표시, 적용 버튼 숨김 확인
+        assert sim_banner.is_visible()
+        assert undo_btn.is_visible()
+        assert not apply_btn.is_visible()
+
+        # 수량 갱신 확인 (QLD 매도, SCHD 매수되어 수량이 변경되었는지)
+        new_qld_qty = int(page.locator("#calc_0_qld_qty").input_value())
+        new_schd_qty = int(page.locator("#calc_0_schd_qty").input_value())
+        assert new_qld_qty < 1800  # QLD 매도
+        assert new_schd_qty > 616  # SCHD 매수
+
+        # 갱신 후 비중 확인 (70:30에 정확히 맞추어졌는지)
+        qld_bar_text = page.locator("#calc_0_bar_qld").inner_text()
+        assert "70." in qld_bar_text or "69." in qld_bar_text
+
+        # 3. 되돌리기 버튼 클릭 (실행 취소)
+        undo_btn.click()
+        page.wait_for_timeout(300)
+
+        # 원래 수량 및 예수금으로 원복되었는지 확인
+        assert page.locator("#calc_0_qld_qty").input_value() == "1800"
+        assert page.locator("#calc_0_schd_qty").input_value() == "616"
+        assert page.locator("#calc_0_cash").input_value() == "1000000"
+
+        # 배너 숨김 및 적용 버튼 재표시 확인
+        assert not sim_banner.is_visible()
+        assert not undo_btn.is_visible()
+        assert apply_btn.is_visible()
+
+        browser.close()
+
 
