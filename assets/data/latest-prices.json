@@ -1,21 +1,21 @@
 {
-  "updated_at": "2026-10-01 22:54:12 KST",
+  "updated_at": "2026-10-02 22:10:45 KST",
   "prices": {
     "458730": {
       "name": "TIGER 미국배당다우존스",
-      "price": 14020,
-      "change": -135,
-      "change_rate": -0.95,
-      "market_sum": 41667,
-      "volume": 2558493
+      "price": 14055,
+      "change": 35,
+      "change_rate": 0.25,
+      "market_sum": 41884,
+      "volume": 1602481
     },
     "418660": {
       "name": "TIGER 미국나스닥100레버리지(합성)",
-      "price": 42240,
-      "change": 1715,
-      "change_rate": 4.23,
-      "market_sum": 7730,
-      "volume": 226268
+      "price": 41110,
+      "change": -1130,
+      "change_rate": -2.68,
+      "market_sum": 7564,
+      "volume": 191750
     }
   }
 }
